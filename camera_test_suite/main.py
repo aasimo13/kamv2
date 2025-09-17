@@ -256,6 +256,12 @@ class CameraHardwareTester:
         """Auto-detect available cameras"""
         self.log("Scanning for cameras...")
 
+        # Check permissions first on macOS
+        if platform.system() == "Darwin" and not self.check_camera_permissions():
+            self.log("Camera permission denied - cannot scan for cameras")
+            self.show_permission_dialog()
+            return
+
         cameras_found = []
         for i in range(10):  # Check more indices
             try:
@@ -312,9 +318,57 @@ class CameraHardwareTester:
         if index is not None:
             self.connect_camera(index)
 
+    def check_camera_permissions(self):
+        """Check if camera permissions are granted on macOS"""
+        if platform.system() == "Darwin":  # macOS
+            try:
+                # Try to open camera briefly to test permissions
+                test_cap = cv2.VideoCapture(0)
+                if test_cap.isOpened():
+                    ret, frame = test_cap.read()
+                    test_cap.release()
+                    if ret and frame is not None:
+                        return True
+                    else:
+                        return False
+                else:
+                    test_cap.release()
+                    return False
+            except Exception:
+                return False
+        return True  # Assume permissions OK on non-macOS systems
+
+    def show_permission_dialog(self):
+        """Show dialog to help user grant camera permissions"""
+        dialog_text = """Camera Access Required
+
+This app needs permission to access your camera for hardware testing.
+
+To grant permission:
+1. Open System Preferences
+2. Go to Security & Privacy
+3. Click the "Camera" tab on the left
+4. Check the box next to "USB Camera Tester"
+
+If "USB Camera Tester" is not listed, try:
+1. Restart this app
+2. Allow access when prompted by macOS
+
+Would you like to open System Preferences now?"""
+
+        result = messagebox.askyesno("Camera Permission Required", dialog_text)
+        if result:
+            os.system("open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Camera'")
+
     def connect_camera(self, index):
         """Connect to specific camera"""
         try:
+            # Check permissions first on macOS
+            if platform.system() == "Darwin" and not self.check_camera_permissions():
+                self.log("Camera permission denied - showing help dialog")
+                self.show_permission_dialog()
+                return
+
             if self.camera:
                 self.camera.release()
                 self.preview_running = False
