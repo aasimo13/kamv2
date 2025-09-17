@@ -260,24 +260,38 @@ Would you like to launch the application now?"""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOURCES_DIR="$SCRIPT_DIR/../Resources"
 
-# Find Python executable
+# Ensure we have a proper GUI environment
+export DISPLAY=${DISPLAY:-:0}
+
+# Clear Claude Code environment variables that prevent GUI
+unset CLAUDECODE
+unset CLAUDE_CODE
+unset CLAUDE_CODE_SSE_PORT
+unset CLAUDE_CODE_ENTRYPOINT
+
+# Find Python executable - try more locations
 PYTHON_CMD=""
-if command -v python3 &> /dev/null; then
-    PYTHON_CMD="python3"
-elif command -v python &> /dev/null; then
-    PYTHON_CMD="python"
-else
-    osascript -e 'display dialog "Python is required. Please install Python from python.org" buttons {"OK"} default button "OK" with icon stop'
+for python_path in /usr/bin/python3 /usr/local/bin/python3 /opt/homebrew/bin/python3 python3 python; do
+    if command -v "$python_path" &> /dev/null; then
+        PYTHON_CMD="$python_path"
+        break
+    fi
+done
+
+if [ -z "$PYTHON_CMD" ]; then
+    osascript -e 'display dialog "Python 3 is required but not found. Please install Python from python.org" buttons {"OK"} default button "OK" with icon stop'
     exit 1
 fi
 
-# Change to a clean directory to avoid numpy source conflicts
-cd "$HOME"
+# Change to the application directory
+cd "$RESOURCES_DIR/camera_test_suite"
 
-# Try to launch the application with error handling
-if ! "$PYTHON_CMD" "$RESOURCES_DIR/camera_test_suite/main.py" "$@" 2>/tmp/usb_camera_error.log; then
+# Launch the application with proper error handling
+echo "Starting USB Camera Tester with $PYTHON_CMD"
+if ! "$PYTHON_CMD" main.py "$@" 2>/tmp/usb_camera_error.log; then
     ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
-    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nPlease ensure you have the required dependencies installed.\" buttons {\"OK\"} default button \"OK\" with icon stop"
+    echo "Error: $ERROR_MSG"
+    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
     exit 1
 fi
 '''
