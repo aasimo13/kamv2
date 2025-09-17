@@ -7,6 +7,56 @@ This application provides comprehensive hardware testing for USB cameras
 with a focus on the WN-L2307k368 48MP camera module.
 """
 
+import os
+import sys
+import platform
+
+# Check for GUI environment before importing tkinter
+def check_gui_environment():
+    """Check if GUI environment is available"""
+    # Quick check for SSH or headless environment
+    if os.environ.get('SSH_CLIENT') or os.environ.get('SSH_TTY'):
+        print("SSH session detected - GUI not available")
+        return False
+
+    # Check for common headless indicators
+    if not os.environ.get('DISPLAY') and platform.system() != "Darwin":
+        print("No DISPLAY environment variable - GUI not available")
+        return False
+
+    # Check for Claude Code environment (headless)
+    if (os.environ.get('CLAUDE_CODE') or os.environ.get('CLAUDECODE') or
+        os.environ.get('CLAUDE_CODE_SSE_PORT') or os.environ.get('CLAUDE_CODE_ENTRYPOINT')):
+        print("Claude Code environment detected - GUI not available")
+        return False
+
+    if platform.system() == "Darwin":  # macOS
+        # Check if we're in a terminal-only environment
+        term = os.environ.get('TERM', '')
+        if term and any(x in term.lower() for x in ['ssh', 'screen', 'tmux']):
+            print(f"Terminal environment ({term}) - GUI not available")
+            return False
+
+        # Check if this is a CI/automated environment
+        if any(env in os.environ for env in ['CI', 'GITHUB_ACTIONS', 'JENKINS_URL']):
+            print("CI/automated environment detected - GUI not available")
+            return False
+
+    # If all checks pass, try a minimal tkinter test
+    try:
+        import tkinter as tk
+        return True
+    except Exception as e:
+        print(f"GUI environment not available: {e}")
+        return False
+
+# Check GUI environment before proceeding
+if not check_gui_environment():
+    print("Error: GUI environment not available.")
+    print("This application requires a graphical interface to run.")
+    print("Please run this application from a desktop environment.")
+    sys.exit(1)
+
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import cv2
@@ -3229,10 +3279,9 @@ Click "Continue" below to proceed with camera detection."""
         """Start the application"""
         self.log_message("Starting mainloop...")
         try:
-            # Make sure window is visible and on top
+            # Make sure window is visible (remove topmost to prevent display issues)
             self.root.lift()
-            self.root.attributes('-topmost', True)
-            self.root.after_idle(self.root.attributes, '-topmost', False)
+            self.root.deiconify()  # Ensure window is not minimized
 
             self.log_message("About to call mainloop")
             self.root.mainloop()

@@ -11,14 +11,17 @@ USB Camera Hardware Test Suite for WN-L2307k368 48MP camera modules with Samsung
 
 ## Critical Issues RESOLVED
 
-### 1. Grey Screen Bug (FIXED ✅)
+### 1. Grey Screen Bug (FIXED ✅) - Additional Fixes Applied
 **Problem**: Main app showed grey screen with camera permission error on startup
-**Root Cause**: Modal dialog with `grab_set()` blocking UI on macOS startup
+**Root Cause**: Modal dialog with `grab_set()` blocking UI on macOS startup + improper GUI environment detection
 **Solution Applied**:
 - Removed immediate permission dialog on startup (main.py:75-80)
 - Removed `grab_set()` from permission dialog (main.py:465-467)
 - Added deferred permission handling in `connect_camera()` (main.py:760-764)
 - Created `_connect_camera_internal()` for post-permission connection
+- **NEW**: Added comprehensive GUI environment detection (main.py:15-50)
+- **NEW**: Removed problematic `-topmost` window attributes (main.py:3273-3275)
+- **NEW**: Added proper headless environment detection for Claude Code, SSH, CI environments
 
 ### 2. PDAF Crash Protection (FIXED ✅)
 **Problem**: OpenCV segmentation faults during autofocus testing
@@ -31,6 +34,15 @@ USB Camera Hardware Test Suite for WN-L2307k368 48MP camera modules with Samsung
 ### 4. SSL Certificate Issues (FIXED ✅)
 **Problem**: macOS certificate verification failures during downloads
 **Solution**: Multi-tier fallback system in installer
+
+### 5. Installer Launch Issues (FIXED ✅) - NEW
+**Problem**: Installer completed but app wouldn't launch, showing errors or hanging
+**Root Cause**: Insufficient error handling in launch mechanism + GUI environment conflicts
+**Solution Applied**:
+- **NEW**: Enhanced installer launch error handling with timeout and fallback messages
+- **NEW**: Improved app bundle launcher script with error capture (USB_Camera_Tester_Simple_Installer.py:277-282)
+- **NEW**: Added proper error dialogs for failed launches with manual launch instructions
+- **NEW**: GUI environment detection prevents hanging in headless environments
 
 ## v2.0 MAJOR UPDATE - Professional Release ✨
 

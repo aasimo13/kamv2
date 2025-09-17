@@ -126,7 +126,28 @@ Would you like to launch the application now?"""
                                     ["Launch", "Don't Launch"], "Launch")
 
             if result == "button returned:Launch":
-                subprocess.run(["open", self.final_app_path])
+                try:
+                    # Try to launch the application
+                    launch_result = subprocess.run(["open", self.final_app_path],
+                                                 capture_output=True, text=True, timeout=10)
+                    if launch_result.returncode != 0:
+                        error_msg = f"Failed to launch application: {launch_result.stderr}"
+                        self.show_dialog("Launch Error",
+                                       f"Could not launch the application automatically.\n\n"
+                                       f"Error: {error_msg}\n\n"
+                                       f"You can manually launch it from:\n{self.final_app_path}",
+                                       ["OK"], "OK")
+                except subprocess.TimeoutExpired:
+                    self.show_dialog("Launch Warning",
+                                   "Application launch is taking longer than expected.\n\n"
+                                   f"If it doesn't open, you can manually launch it from:\n{self.final_app_path}",
+                                   ["OK"], "OK")
+                except Exception as e:
+                    self.show_dialog("Launch Error",
+                                   f"Could not launch the application automatically.\n\n"
+                                   f"Error: {str(e)}\n\n"
+                                   f"You can manually launch it from:\n{self.final_app_path}",
+                                   ["OK"], "OK")
 
         except Exception as e:
             error_msg = f"Installation failed: {str(e)}"
@@ -253,8 +274,12 @@ fi
 # Change to a clean directory to avoid numpy source conflicts
 cd "$HOME"
 
-# Launch the application with full path
-exec "$PYTHON_CMD" "$RESOURCES_DIR/camera_test_suite/main.py" "$@"
+# Try to launch the application with error handling
+if ! "$PYTHON_CMD" "$RESOURCES_DIR/camera_test_suite/main.py" "$@" 2>/tmp/usb_camera_error.log; then
+    ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
+    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nPlease ensure you have the required dependencies installed.\" buttons {\"OK\"} default button \"OK\" with icon stop"
+    exit 1
+fi
 '''
 
         launcher_path = os.path.join(macos_dir, "USBCameraTester")
