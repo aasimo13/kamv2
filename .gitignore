@@ -36,10 +36,11 @@ build/
 temp/
 tmp/
 
-# App bundles (generated)
-installer_build/*.app
-installer_build/*.dmg
+# App bundles (generated - but keep final release builds)
 installer_build/temp_*
+# Allow final release builds
+!installer_build/USB_Camera_Tester_Installer_v2.0.dmg
+!installer_build/USB\ Camera\ Tester\ Installer.app
 
 # Log files
 *.log

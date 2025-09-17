@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RESOURCES_DIR="$SCRIPT_DIR/../Resources"
+
+# Change to resources directory
+cd "$RESOURCES_DIR"
+
+# Launch the simple native installer
+if command -v python3 &> /dev/null; then
+    python3 USB_Camera_Tester_Simple_Installer.py "$@"
+elif command -v python &> /dev/null; then
+    python USB_Camera_Tester_Simple_Installer.py "$@"
+else
+    osascript -e 'display dialog "Python is required but not installed. Please install Python 3.8 or later from python.org" buttons {"OK"} default button "OK" with icon stop'
+    exit 1
+fi
