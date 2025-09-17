@@ -171,7 +171,23 @@ Would you like to launch the application now?"""
             raise Exception("Python installation not found")
 
     def download_application(self):
-        """Download the latest version from GitHub"""
+        """Use local application files instead of downloading"""
+        self.show_progress("Using local application files...")
+
+        # Use local source directory instead of downloading
+        local_source = os.path.dirname(os.path.abspath(__file__))
+        self.source_path = local_source
+
+        # Verify local source exists
+        expected_app_path = os.path.join(local_source, "camera_test_suite", "main.py")
+        if not os.path.exists(expected_app_path):
+            raise Exception(f"Local application files not found at: {expected_app_path}")
+
+        self.show_progress("✓ Local application files verified")
+        return
+
+    def download_application_OLD(self):
+        """Download the latest version from GitHub (OLD VERSION)"""
         github_url = "https://github.com/aasimo13/Kam/archive/refs/heads/main.zip"
         download_path = os.path.join(self.temp_dir, "usb_camera_tester.zip")
 
@@ -184,33 +200,7 @@ Would you like to launch the application now?"""
             self.show_progress(f"Download error: {e}")
             self.show_progress("Trying alternative download method...")
 
-            try:
-                # Create unverified SSL context
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-
-                opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_context))
-                urllib.request.install_opener(opener)
-                urllib.request.urlretrieve(github_url, download_path)
-            except Exception as e2:
-                self.show_progress("SSL fallback failed, using curl...")
-
-                # Use curl as final fallback
-                result = subprocess.run([
-                    "curl", "-L", "-k", "-o", download_path, github_url
-                ], capture_output=True, text=True)
-
-                if result.returncode != 0:
-                    raise Exception(f"Download failed: {result.stderr}")
-
-        # Extract the downloaded file
-        self.show_progress("Extracting downloaded files...")
-        extract_path = os.path.join(self.temp_dir, "extracted")
-        with zipfile.ZipFile(download_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_path)
-
-        self.source_path = os.path.join(extract_path, "Kam-main")
+                # (Old download code removed - now using local files)
 
     def install_dependencies(self):
         """Install required Python dependencies"""
@@ -269,12 +259,18 @@ unset CLAUDE_CODE
 unset CLAUDE_CODE_SSE_PORT
 unset CLAUDE_CODE_ENTRYPOINT
 
-# Find Python executable - try more locations
+# Find Python executable - prefer user-installed versions over system
 PYTHON_CMD=""
-for python_path in /usr/bin/python3 /usr/local/bin/python3 /opt/homebrew/bin/python3 python3 python; do
+for python_path in /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 /Library/Frameworks/Python.framework/Versions/*/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 python3 /usr/bin/python3 python; do
     if command -v "$python_path" &> /dev/null; then
-        PYTHON_CMD="$python_path"
-        break
+        # Test if this Python can import numpy (check for architecture compatibility)
+        if "$python_path" -c "import numpy" 2>/dev/null; then
+            PYTHON_CMD="$python_path"
+            echo "Found compatible Python: $PYTHON_CMD"
+            break
+        else
+            echo "Python $python_path has architecture issues, trying next..."
+        fi
     fi
 done
 
