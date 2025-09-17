@@ -88,7 +88,22 @@ class CameraHardwareTester:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("USB Camera Hardware Test Suite - WN-L2307k368 48MP")
+
+        # Force window to show properly and avoid grey screen
+        self.root.withdraw()  # Hide initially while setting up
         self.root.geometry("1400x900")
+
+        # Set window properties to ensure proper display
+        self.root.resizable(True, True)
+        self.root.configure(bg='white')  # Ensure background is set
+
+        # Center the window on screen
+        self.root.update_idletasks()  # Calculate window size
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width - 1400) // 2
+        y = (screen_height - 900) // 2
+        self.root.geometry(f"1400x900+{x}+{y}")
 
         # Camera properties
         self.camera = None
@@ -121,6 +136,17 @@ class CameraHardwareTester:
         self.setup_ui()
         self.setup_styles()
 
+        # Show the window after UI is fully set up
+        self.root.deiconify()  # Show the window
+        self.root.update_idletasks()  # Force UI update
+
+        # macOS-specific fixes for grey screen issue
+        if platform.system() == "Darwin":
+            # Force window refresh on macOS
+            self.root.after(50, self._finish_macos_setup)
+        else:
+            self.root.focus_force()  # Bring to front
+
         # Auto-detect USB cameras in a separate thread to avoid blocking UI
         if platform.system() == "Darwin":  # macOS
             # Don't show blocking dialog immediately - let user access UI first
@@ -128,6 +154,39 @@ class CameraHardwareTester:
             self.log_message("Use 'Connect Camera' button when ready to test cameras.")
         else:
             self.auto_detect_usb_cameras()
+
+    def _finish_macos_setup(self):
+        """Complete macOS-specific setup to avoid grey screen"""
+        try:
+            # Force window to redraw completely
+            self.root.update()
+            self.root.lift()
+            self.root.attributes('-alpha', 0.99)  # Slight transparency change to force redraw
+            self.root.attributes('-alpha', 1.0)   # Back to full opacity
+            self.root.focus_force()
+
+            # Ensure the window content is properly displayed
+            if hasattr(self, 'notebook'):
+                self.notebook.update_idletasks()
+
+            # Final check - if window still appears grey, try one more refresh
+            self.root.after(100, self._final_window_check)
+
+            self.log_message("macOS setup completed")
+        except Exception as e:
+            self.log_message(f"macOS setup error: {e}")
+
+    def _final_window_check(self):
+        """Final check to ensure window is properly displayed"""
+        try:
+            # Force complete window refresh
+            self.root.withdraw()
+            self.root.deiconify()
+            self.root.update()
+            self.root.lift()
+            self.log_message("Final window refresh completed")
+        except Exception as e:
+            self.log_message(f"Final window check error: {e}")
 
     def setup_styles(self):
         style = ttk.Style()
@@ -3279,9 +3338,12 @@ Click "Continue" below to proceed with camera detection."""
         """Start the application"""
         self.log_message("Starting mainloop...")
         try:
-            # Make sure window is visible (remove topmost to prevent display issues)
-            self.root.lift()
-            self.root.deiconify()  # Ensure window is not minimized
+            # Force window to be fully visible and updated before starting mainloop
+            self.root.deiconify()  # Ensure window is shown
+            self.root.lift()  # Bring to front
+            self.root.attributes('-alpha', 1.0)  # Ensure full opacity
+            self.root.update()  # Force immediate UI update
+            self.root.after(100, lambda: self.root.focus_force())  # Focus after slight delay
 
             self.log_message("About to call mainloop")
             self.root.mainloop()

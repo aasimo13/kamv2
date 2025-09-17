@@ -11,9 +11,9 @@ USB Camera Hardware Test Suite for WN-L2307k368 48MP camera modules with Samsung
 
 ## Critical Issues RESOLVED
 
-### 1. Grey Screen Bug (FIXED ✅) - Additional Fixes Applied
+### 1. Grey Screen Bug (FIXED ✅) - Comprehensive Fixes Applied
 **Problem**: Main app showed grey screen with camera permission error on startup
-**Root Cause**: Modal dialog with `grab_set()` blocking UI on macOS startup + improper GUI environment detection
+**Root Cause**: Multiple issues - Modal dialog blocking, window initialization timing, macOS display refresh issues
 **Solution Applied**:
 - Removed immediate permission dialog on startup (main.py:75-80)
 - Removed `grab_set()` from permission dialog (main.py:465-467)
@@ -22,6 +22,13 @@ USB Camera Hardware Test Suite for WN-L2307k368 48MP camera modules with Samsung
 - **NEW**: Added comprehensive GUI environment detection (main.py:15-50)
 - **NEW**: Removed problematic `-topmost` window attributes (main.py:3273-3275)
 - **NEW**: Added proper headless environment detection for Claude Code, SSH, CI environments
+- **LATEST**: Complete window initialization overhaul (main.py:88-149):
+  - Window hidden during setup, shown after UI complete
+  - Proper window centering and sizing
+  - macOS-specific display refresh sequence
+  - Multiple forced window updates and redraws
+  - Alpha channel manipulation to force macOS refresh
+  - Final fallback window refresh cycle
 
 ### 2. PDAF Crash Protection (FIXED ✅)
 **Problem**: OpenCV segmentation faults during autofocus testing
