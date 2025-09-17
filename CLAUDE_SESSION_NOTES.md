@@ -161,11 +161,18 @@ def check_camera_permissions(self):
 - Graceful degradation when camera unavailable
 
 **WORKING FILES:**
-- `camera_test_suite/main.py` - Complete functional version with permission handling
-- `installer_build/USB_Camera_Tester_Installer_v2.0.dmg` - Latest installer with permission fix
+- `camera_test_suite/main.py` - **ACTIVE** main_complete.py version (user preferred)
+- `camera_test_suite/main_redesigned.py` - Modern threaded GUI (saved for future)
+- `camera_test_suite/main_complete.py` - Original complete version (source)
+- `installer_build/USB_Camera_Tester_Installer_v2.0.dmg` - Latest installer with main_complete.py
 - All comprehensive testing features fully operational
 
-**Status: FULLY FUNCTIONAL - PRODUCTION READY** ✅🚀
+**GUI VERSION CHOICES:**
+- **Current Active**: main_complete.py - Simple, functional interface with all 9 tests
+- **Available**: main_redesigned.py - Modern threaded GUI with tabbed interface
+- **User Choice**: Switched to main_complete.py per user request
+
+**Status: FULLY FUNCTIONAL - USING MAIN_COMPLETE.PY GUI** ✅🚀
 
 ## FINAL SESSION ACHIEVEMENTS (Complete Modern Redesign) 🚀
 
@@ -182,7 +189,46 @@ def check_camera_permissions(self):
 8. ✅ **Real-Time Performance** - 30 FPS camera preview with live metrics
 9. ✅ **Enhanced User Experience** - Responsive, professional testing suite
 
-## GUI REDESIGN TECHNICAL DETAILS 🔧
+### GUI PREFERENCE UPDATE (Current Session) 🔄
+10. ✅ **Switched to main_complete.py** - User requested complete version instead of redesigned GUI
+11. ✅ **Preserved Modern Version** - Saved redesigned GUI as main_redesigned.py for future use
+12. ✅ **Maintained All Features** - Complete testing suite with simple, functional interface
+
+## CURRENT GUI TECHNICAL DETAILS 🔧
+
+### Active GUI: main_complete.py
+- **Simple UI Design**: Traditional tkinter interface with clear layout
+- **Comprehensive Testing**: 9 complete hardware validation tests
+- **Threading Support**: Background test execution to prevent UI blocking
+- **Progress Tracking**: Real-time progress bar and test status updates
+- **Export Functionality**: JSON export with detailed test results
+
+### Test Suite Features (WN-L2307k368)
+- **Basic Connection**: Camera detection and frame capture validation
+- **Resolution Test**: Multi-resolution testing up to 8000x6000
+- **Frame Rate Test**: FPS measurement and stability analysis
+- **Autofocus Test**: Comprehensive PDAF functionality testing
+- **Exposure Control**: Dynamic exposure setting validation
+- **White Balance**: Auto and manual white balance testing
+- **S5KGM1ST Sensor**: Samsung sensor-specific feature testing
+- **Image Quality**: Sharpness, brightness, and contrast analysis
+- **USB Performance**: Interface speed and sustained capture testing
+
+### Alternative GUI Available
+- **main_redesigned.py**: Modern threaded architecture available if needed
+  - Tabbed interface (📷 Camera, 🔬 Tests, 📊 Results)
+  - Real-time performance metrics and status indicators
+  - Professional styling with responsive design
+  - Advanced threading with queue-based communication
+
+### Current User Experience
+- **Functional Interface**: Clear, straightforward operation
+- **Reliable Testing**: All 9 tests execute properly with progress feedback
+- **Results Export**: Complete test data export to JSON format
+- **Camera Integration**: Smooth camera connection and preview
+- **Permission Handling**: Automatic macOS camera permission management
+
+## ARCHIVED: Modern GUI Technical Details 🔧
 
 ### Performance Architecture
 - **Threaded Design**: Camera operations run in dedicated worker thread
