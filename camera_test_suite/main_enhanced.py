@@ -9,8 +9,8 @@ import os
 import sys
 import platform
 
-# GUI environment check
-if os.environ.get('CLAUDECODE') or os.environ.get('SSH_CLIENT'):
+# GUI environment check - only if explicitly disabled
+if os.environ.get('DISPLAY') == '' and not os.environ.get('FORCE_GUI'):
     print("Headless environment detected - GUI not available")
     sys.exit(1)
 
@@ -88,6 +88,7 @@ class ModernCameraHardwareTester:
         # Camera properties
         self.camera = None
         self.camera_index = None
+        self.camera_backend = cv2.CAP_ANY
         self.preview_running = False
         self.is_testing = False
         self.test_results = []
@@ -589,27 +590,65 @@ class ModernCameraHardwareTester:
 
     # Camera control methods
     def auto_detect_cameras(self):
-        """Auto-detect available cameras"""
+        """Auto-detect available cameras with enhanced detection"""
         self.update_status("Scanning for cameras...")
         found_cameras = []
 
-        for i in range(10):
-            try:
-                cap = cv2.VideoCapture(i)
-                if cap.isOpened():
-                    ret, frame = cap.read()
-                    if ret:
-                        found_cameras.append(i)
-                    cap.release()
-            except:
-                pass
+        # Try different backends for better detection
+        backends = [cv2.CAP_ANY, cv2.CAP_AVFOUNDATION, cv2.CAP_V4L2, cv2.CAP_DSHOW]
+
+        for backend in backends:
+            for i in range(15):  # Check more indices
+                try:
+                    cap = cv2.VideoCapture(i, backend)
+                    if cap.isOpened():
+                        # Test if we can actually read frames
+                        ret, frame = cap.read()
+                        if ret and frame is not None:
+                            width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                            height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                            if width > 0 and height > 0:
+                                camera_info = {
+                                    'index': i,
+                                    'backend': backend,
+                                    'resolution': f"{int(width)}x{int(height)}"
+                                }
+                                if camera_info not in found_cameras:
+                                    found_cameras.append(camera_info)
+                        cap.release()
+                except Exception as e:
+                    continue
 
         if found_cameras:
-            self.camera_index = found_cameras[0]
-            self.connect_camera(self.camera_index)
-            self.update_status(f"Connected to camera {self.camera_index}")
+            # Use the first camera found
+            best_camera = found_cameras[0]
+            self.camera_index = best_camera['index']
+            self.camera_backend = best_camera['backend']
+
+            if self.connect_camera(self.camera_index, self.camera_backend):
+                self.update_status(f"Connected to camera {self.camera_index} ({best_camera['resolution']})")
+
+                # Update info with all found cameras
+                info_text = f"Found {len(found_cameras)} camera(s):\n"
+                for i, cam in enumerate(found_cameras):
+                    info_text += f"  {i}: Index {cam['index']} - {cam['resolution']}\n"
+                self.info_text.delete(1.0, tk.END)
+                self.info_text.insert(1.0, info_text)
+            else:
+                self.update_status("Failed to connect to detected camera", error=True)
         else:
-            self.update_status("No cameras found", error=True)
+            self.update_status("No cameras found - check connections and permissions", error=True)
+            # Show help message
+            help_msg = """Camera Detection Help:
+
+1. Check USB connection
+2. Ensure camera permissions are granted
+3. Try disconnecting/reconnecting camera
+4. Check System Preferences > Security & Privacy > Camera
+5. Try manual connection with index 0-10"""
+
+            self.info_text.delete(1.0, tk.END)
+            self.info_text.insert(1.0, help_msg)
 
     def manual_connect(self):
         """Manual camera connection"""
@@ -619,25 +658,49 @@ class ModernCameraHardwareTester:
         if index is not None:
             self.connect_camera(index)
 
-    def connect_camera(self, index):
-        """Connect to camera"""
+    def connect_camera(self, index, backend=cv2.CAP_ANY):
+        """Connect to camera with specified backend"""
         try:
             if self.camera:
                 self.camera.release()
 
-            self.camera = cv2.VideoCapture(index)
+            self.camera = cv2.VideoCapture(index, backend)
 
             if self.camera.isOpened():
-                # Set to highest resolution
-                self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 4000)
-                self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 3000)
+                # Test if we can read frames
+                ret, test_frame = self.camera.read()
+                if not ret or test_frame is None:
+                    self.camera.release()
+                    self.camera = None
+                    self.update_status(f"Camera {index} opened but cannot read frames", error=True)
+                    return False
+
+                # Set to highest available resolution
+                resolutions = [
+                    (4000, 3000),  # 12MP
+                    (3840, 2160),  # 4K
+                    (1920, 1080),  # 1080p
+                    (1280, 720),   # 720p
+                    (640, 480)     # VGA
+                ]
+
+                for width, height in resolutions:
+                    self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                    self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                    actual_width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+                    actual_height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                    if actual_width >= width * 0.9 and actual_height >= height * 0.9:
+                        break
 
                 self.camera_index = index
+                self.camera_backend = backend
                 self.status_indicator.config(fg=self.colors['accent_green'])
                 self.status_text.config(text=f"Camera {index} Connected")
                 self.update_camera_info()
                 self.update_status(f"Successfully connected to camera {index}")
                 return True
+            else:
+                self.update_status(f"Failed to open camera {index}", error=True)
         except Exception as e:
             self.update_status(f"Connection error: {str(e)}", error=True)
 
