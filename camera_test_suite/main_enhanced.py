@@ -410,7 +410,7 @@ Camera permissions may be required."""
         scroll_container.pack_propagate(False)
 
         # Add scrollbar
-        canvas = tk.Canvas(scroll_container, bg=self.colors['bg_light'], highlightthickness=0, height=280)
+        canvas = tk.Canvas(scroll_container, bg=self.colors['bg_light'], highlightthickness=0, height=200)
         scrollbar = tk.Scrollbar(scroll_container, orient="vertical", command=canvas.yview)
         test_scroll = tk.Frame(canvas, bg=self.colors['bg_light'])
 
@@ -454,9 +454,9 @@ Camera permissions may be required."""
                                activeforeground=self.colors['accent_blue'])
             cb.pack(anchor="w", padx=10, pady=2)
 
-        # Test control buttons - prominent position with more padding
+        # Test control buttons - positioned after test categories for visibility
         btn_frame = tk.Frame(test_frame, bg=self.colors['bg_medium'])
-        btn_frame.pack(fill="x", side="bottom", pady=(20, 10))
+        btn_frame.pack(fill="x", pady=20)
 
         self.create_button(btn_frame, "▶ Run Selected Tests", self.run_selected_tests,
                           style='Success.TButton').pack(fill="x", pady=3, ipady=5)
