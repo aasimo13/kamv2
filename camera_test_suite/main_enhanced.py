@@ -393,9 +393,9 @@ Camera permissions may be required."""
                                activeforeground=self.colors['accent_blue'])
             rb.pack(anchor="w", padx=20, pady=2)
 
-        # Test categories
+        # Test categories with scrollable area
         cat_frame = tk.Frame(test_frame, bg=self.colors['bg_light'])
-        cat_frame.pack(fill="both", expand=True, pady=(0, 15))
+        cat_frame.pack(fill="x", pady=(0, 15))
 
         cat_label = tk.Label(cat_frame,
                             text="Test Categories",
@@ -404,9 +404,26 @@ Camera permissions may be required."""
                             fg=self.colors['text_primary'])
         cat_label.pack(anchor="w", padx=10, pady=(10, 5))
 
-        # Create scrollable test list
-        test_scroll = tk.Frame(cat_frame, bg=self.colors['bg_light'])
-        test_scroll.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        # Create scrollable test list with fixed height
+        scroll_container = tk.Frame(cat_frame, bg=self.colors['bg_light'], height=300)
+        scroll_container.pack(fill="x", padx=10, pady=(0, 10))
+        scroll_container.pack_propagate(False)
+
+        # Add scrollbar
+        canvas = tk.Canvas(scroll_container, bg=self.colors['bg_light'], highlightthickness=0, height=280)
+        scrollbar = tk.Scrollbar(scroll_container, orient="vertical", command=canvas.yview)
+        test_scroll = tk.Frame(canvas, bg=self.colors['bg_light'])
+
+        test_scroll.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=test_scroll, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
         self.test_vars = {}
         self.comprehensive_tests = [
@@ -415,21 +432,11 @@ Camera permissions may be required."""
             ("Frame Rate Analysis", "framerate"),
             ("PDAF Autofocus System", "autofocus"),
             ("Exposure Control", "exposure"),
-            ("White Balance Accuracy", "whitebalance"),
-            ("Color Reproduction", "color"),
-            ("Image Sharpness (MTF)", "sharpness"),
-            ("Noise Analysis (SNR)", "noise"),
-            ("Dynamic Range", "dynamic"),
-            ("Lens Distortion", "distortion"),
-            ("Uniformity & Vignetting", "uniformity"),
-            ("USB Bandwidth", "usb"),
-            ("Thermal Performance", "thermal"),
-            ("Latency Measurement", "latency"),
-            ("S5KGM1ST Sensor Tests", "sensor"),
-            ("HDR Performance", "hdr"),
-            ("Low Light Performance", "lowlight"),
-            ("Motion Blur Analysis", "motion"),
-            ("Power Consumption", "power")
+            ("White Balance", "whitebalance"),
+            ("Image Sharpness", "sharpness"),
+            ("Noise Analysis", "noise"),
+            ("USB Performance", "usb"),
+            ("S5KGM1ST Sensor", "sensor")
         ]
 
         for test_name, test_key in self.comprehensive_tests:
@@ -447,9 +454,9 @@ Camera permissions may be required."""
                                activeforeground=self.colors['accent_blue'])
             cb.pack(anchor="w", padx=10, pady=2)
 
-        # Test control buttons
+        # Test control buttons - fixed position at bottom
         btn_frame = tk.Frame(test_frame, bg=self.colors['bg_medium'])
-        btn_frame.pack(fill="x")
+        btn_frame.pack(fill="x", side="bottom", pady=10)
 
         self.create_button(btn_frame, "▶ Run Selected Tests", self.run_selected_tests,
                           style='Success.TButton').pack(fill="x", pady=2)
@@ -1097,20 +1104,10 @@ python3 main_enhanced.py"""
             "autofocus": self.test_autofocus,
             "exposure": self.test_exposure,
             "whitebalance": self.test_white_balance,
-            "color": self.test_color_accuracy,
             "sharpness": self.test_sharpness,
             "noise": self.test_noise,
-            "dynamic": self.test_dynamic_range,
-            "distortion": self.test_distortion,
-            "uniformity": self.test_uniformity,
             "usb": self.test_usb_performance,
-            "thermal": self.test_thermal,
-            "latency": self.test_latency,
-            "sensor": self.test_sensor_specific,
-            "hdr": self.test_hdr,
-            "lowlight": self.test_low_light,
-            "motion": self.test_motion,
-            "power": self.test_power
+            "sensor": self.test_sensor_specific
         }
 
         test_func = test_map.get(test_key, self.test_placeholder)
