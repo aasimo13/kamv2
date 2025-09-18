@@ -43,17 +43,29 @@ This application provides rigorous hardware testing and validation for USB camer
 - WN-L2307k368 48MP camera module
 
 ### Quick Install
-1. Download the latest `USB_Camera_Tester_v4.0_PyQt6.dmg`
+1. Download the latest `USB_Camera_Tester_v4.0_PyQt6_Installer.dmg`
 2. Double-click to mount the disk image
-3. Run `USB Camera Tester Installer.py`
-4. Follow the installation prompts
-5. Launch from Applications folder
+3. **Optional**: Run `USB Camera Tester Uninstaller.app` first for clean installation
+4. Run `USB Camera Tester Installer.app` (proper executable, not .py script)
+5. Follow the installation prompts
+6. Launch from Applications folder
 
 The installer automatically:
-- Downloads the latest PyQt6 version
+- Downloads the latest PyQt6 version from GitHub
 - Installs Python dependencies (OpenCV, NumPy, Pillow, PyQt6, etc.)
 - Creates a professional native macOS application
 - Sets up desktop integration with modern GUI
+
+### Clean Installation (Troubleshooting)
+If you experience installation issues or want to completely remove previous versions:
+
+1. Use `USB Camera Tester Uninstaller.app` first
+2. The uninstaller removes:
+   - All application files from `/Applications`
+   - Python packages (PyQt6, OpenCV, etc.)
+   - Cache and configuration files
+   - Temporary and log files
+3. Then run the installer for a fresh installation
 
 ## 🧪 Camera Specifications
 
@@ -165,9 +177,12 @@ kamv2/
 │   └── create_logo.py          # Icon generation utility
 ├── installer_build/            # Installer configuration
 │   └── USB Camera Tester Installer.app
-├── create_dmg.py               # DMG creation script
-├── USB_Camera_Tester_v4.0_PyQt6.dmg  # Production DMG installer
+├── build_installer_app.py      # Professional installer/uninstaller builder
+├── USB_Camera_Tester_v4.0_PyQt6_Installer.dmg  # Production DMG with installer & uninstaller
 ├── USB_Camera_Tester_Simple_Installer.py  # Installation logic
+├── USB_Camera_Tester_Uninstaller.py  # Complete removal script
+├── USB Camera Tester Installer.app/  # Professional installer app bundle
+├── USB Camera Tester Uninstaller.app/  # Professional uninstaller app bundle
 └── USB_Camera_Testing_Capabilities_Report.md  # Technical documentation
 ```
 
@@ -177,7 +192,7 @@ kamv2/
 ```bash
 git clone https://github.com/aaronsimo13/kamv2.git
 cd kamv2
-python3 create_dmg.py  # Create DMG installer
+python3 build_installer_app.py  # Create DMG with installer & uninstaller
 ```
 
 ### Testing PyQt6 Version

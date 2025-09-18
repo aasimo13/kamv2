@@ -145,15 +145,119 @@ def get_directory_size(path):
                 total += os.path.getsize(file_path)
     return total / 1024
 
+def create_uninstaller_app():
+    """Create uninstaller app bundle"""
+
+    print("🗑️  Creating USB Camera Tester Uninstaller App Bundle...")
+
+    project_dir = Path(__file__).parent
+    uninstaller_script = project_dir / "USB_Camera_Tester_Uninstaller.py"
+
+    # Create app bundle structure
+    app_name = "USB Camera Tester Uninstaller"
+    app_bundle = project_dir / f"{app_name}.app"
+
+    # Remove existing bundle
+    if app_bundle.exists():
+        shutil.rmtree(app_bundle)
+
+    # Create bundle directories
+    contents_dir = app_bundle / "Contents"
+    macos_dir = contents_dir / "MacOS"
+    resources_dir = contents_dir / "Resources"
+
+    macos_dir.mkdir(parents=True)
+    resources_dir.mkdir(parents=True)
+
+    print(f"📁 Created uninstaller app bundle structure: {app_bundle}")
+
+    # Create the executable launcher script
+    launcher_script = f'''#!/bin/bash
+cd "$(dirname "$0")/../Resources"
+
+# Find Python 3 - try common locations
+PYTHON_CMD=""
+for python_path in python3 /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Python.framework/Versions/*/bin/python3; do
+    if command -v "$python_path" >/dev/null 2>&1; then
+        if "$python_path" --version 2>&1 | grep -q "Python 3"; then
+            PYTHON_CMD="$python_path"
+            echo "Using Python: $PYTHON_CMD"
+            break
+        fi
+    fi
+done
+
+if [ -z "$PYTHON_CMD" ]; then
+    osascript -e 'display dialog "Python 3 is required to run the uninstaller.\\n\\nThe uninstaller needs Python 3 to properly remove all files." buttons {{"OK"}} default button "OK" with icon stop'
+    exit 1
+fi
+
+# Run the uninstaller
+exec "$PYTHON_CMD" "USB_Camera_Tester_Uninstaller.py" "$@"
+'''
+
+    # Write the launcher script
+    launcher_path = macos_dir / app_name
+    with open(launcher_path, 'w') as f:
+        f.write(launcher_script)
+
+    # Make it executable
+    os.chmod(launcher_path, 0o755)
+    print("✓ Created uninstaller launcher script")
+
+    # Copy the uninstaller Python script to Resources
+    shutil.copy2(uninstaller_script, resources_dir / "USB_Camera_Tester_Uninstaller.py")
+    print("✓ Copied uninstaller script to Resources")
+
+    # Create Info.plist
+    info_plist = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>{app_name}</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.usb-camera-tester.uninstaller</string>
+    <key>CFBundleName</key>
+    <string>{app_name}</string>
+    <key>CFBundleVersion</key>
+    <string>4.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>4.0</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.14</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>CFBundleDocumentTypes</key>
+    <array/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+</dict>
+</plist>'''
+
+    plist_path = contents_dir / "Info.plist"
+    with open(plist_path, 'w') as f:
+        f.write(info_plist)
+    print("✓ Created uninstaller Info.plist")
+
+    print(f"🗑️  Created uninstaller app bundle: {app_bundle}")
+
+    return app_bundle
+
 def create_installer_dmg():
-    """Create DMG with the app bundle installer"""
+    """Create DMG with the app bundle installer and uninstaller"""
 
     print("📦 Creating installer DMG...")
 
     project_dir = Path(__file__).parent
 
-    # Create the app bundle first
-    app_bundle = create_installer_app()
+    # Create both app bundles
+    installer_app = create_installer_app()
+    uninstaller_app = create_uninstaller_app()
 
     # Create DMG contents directory
     import tempfile
@@ -161,8 +265,9 @@ def create_installer_dmg():
         dmg_contents = Path(temp_dir) / "USB_Camera_Tester_v4_Installer"
         dmg_contents.mkdir()
 
-        # Copy app bundle to DMG contents
-        shutil.copytree(app_bundle, dmg_contents / app_bundle.name)
+        # Copy both app bundles to DMG contents
+        shutil.copytree(installer_app, dmg_contents / installer_app.name)
+        shutil.copytree(uninstaller_app, dmg_contents / uninstaller_app.name)
 
         # Create README
         readme_content = """USB Camera Hardware Test Suite v4.0 - Professional PyQt6 Edition
@@ -178,18 +283,33 @@ def create_installer_dmg():
 
 3. Launch from Applications folder when complete
 
+🗑️  UNINSTALLER (Clean Installation):
+
+• Use "USB Camera Tester Uninstaller.app" BEFORE installing if you:
+  - Had previous installation problems
+  - Want to completely remove old versions
+  - Need to clear cached/corrupted files
+
+• The uninstaller removes:
+  - All application files
+  - Python packages (PyQt6, OpenCV, etc.)
+  - Cache and temporary files
+  - Configuration files
+
 FEATURES:
 • Professional PyQt6 native GUI interface
 • Comprehensive camera testing suite
 • Non-blocking threaded operations
 • Export test results to JSON
 • Native macOS integration
+• Complete uninstaller for clean reinstalls
 
 REQUIREMENTS:
 • macOS 10.14 or later
 • Python 3.8+ (installer will guide you if needed)
 
 TROUBLESHOOTING:
+• Run the Uninstaller first if you have installation issues
 • If "Python 3 required" appears, install from python.org first
 • Grant camera permissions in System Preferences when prompted
 • Ensure camera is not in use by other applications
