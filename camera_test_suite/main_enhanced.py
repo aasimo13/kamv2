@@ -179,6 +179,19 @@ class ModernCameraHardwareTester:
         # Create professional UI
         self.create_professional_ui()
 
+        # Initialize status and info
+        self.update_status("Ready for testing")
+
+        # Add initial info text
+        initial_info = """Professional Camera Test Suite Ready
+
+Click 'Auto-Detect Camera' to scan for cameras
+or use 'Manual Connect' to specify camera index.
+
+Camera permissions may be required."""
+
+        self.info_text.insert(1.0, initial_info)
+
         print("Professional Test Suite Ready")
 
     def setup_styles(self):
@@ -316,7 +329,7 @@ class ModernCameraHardwareTester:
         btn_frame = tk.Frame(control_frame, bg=self.colors['bg_medium'])
         btn_frame.pack(fill="x", pady=(0, 15))
 
-        self.create_button(btn_frame, "Auto-Detect Camera", self.auto_detect_cameras,
+        self.create_button(btn_frame, "Auto-Detect Camera", self.start_camera_detection,
                           style='Modern.TButton').pack(fill="x", pady=2)
         self.create_button(btn_frame, "Manual Connect", self.manual_connect,
                           style='Modern.TButton').pack(fill="x", pady=2)
@@ -589,55 +602,167 @@ class ModernCameraHardwareTester:
         return btn
 
     # Camera control methods
-    def auto_detect_cameras(self):
-        """Auto-detect available cameras with enhanced detection"""
-        self.update_status("Scanning for cameras...")
+    def start_camera_detection(self):
+        """Start camera detection in a thread"""
+        self.update_status("Starting camera detection...")
+        threading.Thread(target=self.auto_detect_cameras, daemon=True).start()
+
+    def simple_detect_cameras(self):
+        """Simple fallback camera detection with crash protection"""
+        print("Starting simple camera detection...")
         found_cameras = []
 
-        # Try different backends for better detection
-        backends = [cv2.CAP_ANY, cv2.CAP_AVFOUNDATION, cv2.CAP_V4L2, cv2.CAP_DSHOW]
+        for i in range(3):  # Check first 3 indices only
+            try:
+                print(f"Testing camera index {i}")
+                cap = None
 
-        for backend in backends:
-            for i in range(15):  # Check more indices
+                # Use try-except around VideoCapture creation
                 try:
-                    cap = cv2.VideoCapture(i, backend)
+                    cap = cv2.VideoCapture(i)
+                    if not cap:
+                        continue
+
                     if cap.isOpened():
-                        # Test if we can actually read frames
+                        # Set a timeout for frame reading
+                        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+                        # Try to read a frame with timeout protection
                         ret, frame = cap.read()
                         if ret and frame is not None:
                             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
                             if width > 0 and height > 0:
-                                camera_info = {
+                                found_cameras.append({
                                     'index': i,
-                                    'backend': backend,
                                     'resolution': f"{int(width)}x{int(height)}"
-                                }
-                                if camera_info not in found_cameras:
-                                    found_cameras.append(camera_info)
-                        cap.release()
+                                })
+                                print(f"Simple detection found camera {i}: {int(width)}x{int(height)}")
+
                 except Exception as e:
+                    print(f"Error creating capture for camera {i}: {e}")
+
+                finally:
+                    # Always release the capture
+                    if cap:
+                        try:
+                            cap.release()
+                        except:
+                            pass
+
+            except Exception as e:
+                print(f"Simple detection error on camera {i}: {e}")
+
+        return found_cameras
+
+    def auto_detect_cameras(self):
+        """Auto-detect available cameras with enhanced detection"""
+        self.update_status("Scanning for cameras...")
+        found_cameras = []
+        tested_indices = set()
+
+        # Try different backends for better detection
+        backends = [cv2.CAP_ANY, cv2.CAP_AVFOUNDATION]  # Reduce to most reliable backends
+
+        for backend in backends:
+            for i in range(10):  # Check reasonable range
+                if i in tested_indices:
                     continue
+
+                try:
+                    print(f"Testing camera index {i} with backend {backend}")
+                    cap = None
+
+                    try:
+                        cap = cv2.VideoCapture(i, backend)
+                        if not cap:
+                            continue
+
+                        if cap.isOpened():
+                            # Set buffer size to prevent crashes
+                            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+                            # Test if we can actually read frames
+                            ret, frame = cap.read()
+                            if ret and frame is not None:
+                                width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                                height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+                                if width > 0 and height > 0:
+                                    camera_info = {
+                                        'index': i,
+                                        'backend': backend,
+                                        'resolution': f"{int(width)}x{int(height)}"
+                                    }
+
+                                    # Check for duplicates by index only
+                                    duplicate = False
+                                    for existing in found_cameras:
+                                        if existing['index'] == i:
+                                            duplicate = True
+                                            break
+
+                                    if not duplicate:
+                                        found_cameras.append(camera_info)
+                                        tested_indices.add(i)
+                                        print(f"Found camera: {camera_info}")
+
+                    except Exception as e:
+                        print(f"Error with camera {i}: {e}")
+
+                    finally:
+                        if cap:
+                            try:
+                                cap.release()
+                            except:
+                                pass
+
+                except Exception as e:
+                    print(f"Error testing camera {i}: {e}")
+                    continue
+
+        print(f"Total cameras found: {len(found_cameras)}")
+
+        # Fallback to simple detection if advanced detection found nothing
+        if not found_cameras:
+            print("Advanced detection failed, trying simple detection...")
+            self.root.after(0, lambda: self.update_status("Trying simple detection..."))
+
+            simple_cameras = self.simple_detect_cameras()
+            for cam in simple_cameras:
+                found_cameras.append({
+                    'index': cam['index'],
+                    'backend': cv2.CAP_ANY,
+                    'resolution': cam['resolution']
+                })
 
         if found_cameras:
             # Use the first camera found
             best_camera = found_cameras[0]
             self.camera_index = best_camera['index']
-            self.camera_backend = best_camera['backend']
+            self.camera_backend = best_camera.get('backend', cv2.CAP_ANY)
+
+            print(f"Attempting to connect to camera {self.camera_index}")
 
             if self.connect_camera(self.camera_index, self.camera_backend):
-                self.update_status(f"Connected to camera {self.camera_index} ({best_camera['resolution']})")
+                self.root.after(0, lambda: self.update_status(f"Connected to camera {self.camera_index} ({best_camera['resolution']})"))
 
                 # Update info with all found cameras
-                info_text = f"Found {len(found_cameras)} camera(s):\n"
+                info_text = f"Found {len(found_cameras)} camera(s):\n\n"
                 for i, cam in enumerate(found_cameras):
-                    info_text += f"  {i}: Index {cam['index']} - {cam['resolution']}\n"
-                self.info_text.delete(1.0, tk.END)
-                self.info_text.insert(1.0, info_text)
+                    info_text += f"Camera {i+1}:\n"
+                    info_text += f"  Index: {cam['index']}\n"
+                    info_text += f"  Resolution: {cam['resolution']}\n"
+                    info_text += f"  Backend: {cam.get('backend', 'Default')}\n\n"
+
+                # Use root.after to update UI from main thread
+                self.root.after(0, lambda: self.info_text.delete(1.0, tk.END))
+                self.root.after(0, lambda: self.info_text.insert(1.0, info_text))
             else:
-                self.update_status("Failed to connect to detected camera", error=True)
+                self.root.after(0, lambda: self.update_status("Failed to connect to detected camera", error=True))
         else:
-            self.update_status("No cameras found - check connections and permissions", error=True)
+            self.root.after(0, lambda: self.update_status("No cameras found - check connections and permissions", error=True))
             # Show help message
             help_msg = """Camera Detection Help:
 
@@ -645,10 +770,14 @@ class ModernCameraHardwareTester:
 2. Ensure camera permissions are granted
 3. Try disconnecting/reconnecting camera
 4. Check System Preferences > Security & Privacy > Camera
-5. Try manual connection with index 0-10"""
+5. Try manual connection with index 0-10
 
-            self.info_text.delete(1.0, tk.END)
-            self.info_text.insert(1.0, help_msg)
+Debug: Run from Terminal to see detailed output:
+cd "/Applications/USB Camera Tester.app/Contents/Resources/camera_test_suite"
+python3 main_enhanced.py"""
+
+            self.root.after(0, lambda: self.info_text.delete(1.0, tk.END))
+            self.root.after(0, lambda: self.info_text.insert(1.0, help_msg))
 
     def manual_connect(self):
         """Manual camera connection"""
@@ -659,50 +788,83 @@ class ModernCameraHardwareTester:
             self.connect_camera(index)
 
     def connect_camera(self, index, backend=cv2.CAP_ANY):
-        """Connect to camera with specified backend"""
+        """Connect to camera with specified backend and crash protection"""
         try:
+            print(f"Connecting to camera {index} with backend {backend}")
+
+            # Clean up existing camera
             if self.camera:
-                self.camera.release()
-
-            self.camera = cv2.VideoCapture(index, backend)
-
-            if self.camera.isOpened():
-                # Test if we can read frames
-                ret, test_frame = self.camera.read()
-                if not ret or test_frame is None:
+                try:
                     self.camera.release()
-                    self.camera = None
-                    self.update_status(f"Camera {index} opened but cannot read frames", error=True)
+                except:
+                    pass
+                self.camera = None
+
+            # Create new camera capture with error handling
+            try:
+                self.camera = cv2.VideoCapture(index, backend)
+                if not self.camera:
+                    self.update_status(f"Failed to create camera capture for index {index}", error=True)
                     return False
 
-                # Set to highest available resolution
-                resolutions = [
-                    (4000, 3000),  # 12MP
-                    (3840, 2160),  # 4K
-                    (1920, 1080),  # 1080p
-                    (1280, 720),   # 720p
-                    (640, 480)     # VGA
-                ]
+                if self.camera.isOpened():
+                    # Set buffer to prevent crashes
+                    self.camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
-                for width, height in resolutions:
-                    self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-                    self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-                    actual_width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
-                    actual_height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                    if actual_width >= width * 0.9 and actual_height >= height * 0.9:
-                        break
+                    # Test if we can read frames
+                    ret, test_frame = self.camera.read()
+                    if not ret or test_frame is None:
+                        print(f"Camera {index} opened but cannot read frames")
+                        self.camera.release()
+                        self.camera = None
+                        self.update_status(f"Camera {index} opened but cannot read frames", error=True)
+                        return False
 
-                self.camera_index = index
-                self.camera_backend = backend
-                self.status_indicator.config(fg=self.colors['accent_green'])
-                self.status_text.config(text=f"Camera {index} Connected")
-                self.update_camera_info()
-                self.update_status(f"Successfully connected to camera {index}")
-                return True
-            else:
-                self.update_status(f"Failed to open camera {index}", error=True)
+                    # Set to highest available resolution with error handling
+                    resolutions = [
+                        (1920, 1080),  # 1080p - start with safe resolution
+                        (1280, 720),   # 720p
+                        (640, 480)     # VGA
+                    ]
+
+                    for width, height in resolutions:
+                        try:
+                            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                            actual_width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+                            actual_height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                            if actual_width >= width * 0.8 and actual_height >= height * 0.8:
+                                print(f"Set resolution to {actual_width}x{actual_height}")
+                                break
+                        except Exception as e:
+                            print(f"Error setting resolution {width}x{height}: {e}")
+
+                    self.camera_index = index
+                    self.camera_backend = backend
+                    self.status_indicator.config(fg=self.colors['accent_green'])
+                    self.status_text.config(text=f"Camera {index} Connected")
+                    self.update_camera_info()
+                    self.update_status(f"Successfully connected to camera {index}")
+                    return True
+                else:
+                    print(f"Camera {index} failed to open")
+                    self.update_status(f"Failed to open camera {index}", error=True)
+
+            except Exception as e:
+                print(f"Error creating camera capture: {e}")
+                self.update_status(f"Camera creation error: {str(e)}", error=True)
+
         except Exception as e:
+            print(f"Connection error: {e}")
             self.update_status(f"Connection error: {str(e)}", error=True)
+
+        # Cleanup on failure
+        if self.camera:
+            try:
+                self.camera.release()
+            except:
+                pass
+            self.camera = None
 
         return False
 
