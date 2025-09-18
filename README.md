@@ -1,6 +1,6 @@
-# USB Camera Hardware Test Suite v2.0
+# USB Camera Hardware Test Suite v4.0 - PyQt6 Professional Edition
 
-A professional macOS application for comprehensive USB camera hardware testing and validation, specifically designed for **WN-L2307k368 48MP camera modules** used in photobooth applications.
+A professional macOS application for comprehensive USB camera hardware testing and validation, featuring a **modern PyQt6 native GUI interface**. Specifically designed for **WN-L2307k368 48MP camera modules** used in photobooth applications.
 
 ![USB Camera Tester Icon](camera_test_suite/icons/icon_256x256.png)
 
@@ -27,8 +27,10 @@ This application provides rigorous hardware testing and validation for USB camer
 - **📈 Trend Analysis** - Historical performance tracking
 
 ### User Experience
-- **🖥️ Native macOS Application** - Professional GUI with intuitive interface
-- **🚀 One-Click Installer** - Professional DMG installer with automatic dependency management
+- **🎨 Modern PyQt6 Interface** - Professional native GUI with platform-native styling
+- **🧵 Non-blocking UI** - Threaded operations prevent interface freezing
+- **📏 Resizable Panels** - Flexible layout with adjustable splitter controls
+- **🚀 One-Click Installer** - Professional DMG installer with automatic PyQt6 setup
 - **📱 Real-time Preview** - Live camera feed during testing
 - **⚡ Fast Testing** - Complete test suite runs in under 5 minutes
 
@@ -41,17 +43,17 @@ This application provides rigorous hardware testing and validation for USB camer
 - WN-L2307k368 48MP camera module
 
 ### Quick Install
-1. Download the latest `USB_Camera_Tester_Installer_v2.0.dmg`
+1. Download the latest `USB_Camera_Tester_v4.0_PyQt6.dmg`
 2. Double-click to mount the disk image
-3. Run `USB Camera Tester Installer.app`
+3. Run `USB Camera Tester Installer.py`
 4. Follow the installation prompts
 5. Launch from Applications folder
 
 The installer automatically:
-- Downloads the latest version
-- Installs Python dependencies (OpenCV, NumPy, Pillow, etc.)
-- Creates a native macOS application
-- Sets up desktop integration
+- Downloads the latest PyQt6 version
+- Installs Python dependencies (OpenCV, NumPy, Pillow, PyQt6, etc.)
+- Creates a professional native macOS application
+- Sets up desktop integration with modern GUI
 
 ## 🧪 Camera Specifications
 
@@ -155,13 +157,16 @@ The installer automatically:
 ```
 kamv2/
 ├── camera_test_suite/          # Main application source
-│   ├── main.py                 # Core testing application
+│   ├── main.py                 # Legacy Tkinter application
+│   ├── main_pyqt6.py          # Modern PyQt6 application (v4.0)
+│   ├── launch_pyqt6.py        # PyQt6 launcher script
 │   ├── icons/                  # Application icons and branding
 │   ├── test_images/            # Reference images for testing
 │   └── create_logo.py          # Icon generation utility
 ├── installer_build/            # Installer configuration
 │   └── USB Camera Tester Installer.app
-├── build_installer.sh          # Build script for installer
+├── create_dmg.py               # DMG creation script
+├── USB_Camera_Tester_v4.0_PyQt6.dmg  # Production DMG installer
 ├── USB_Camera_Tester_Simple_Installer.py  # Installation logic
 └── USB_Camera_Testing_Capabilities_Report.md  # Technical documentation
 ```
@@ -172,10 +177,18 @@ kamv2/
 ```bash
 git clone https://github.com/aaronsimo13/kamv2.git
 cd kamv2
-./build_installer.sh
+python3 create_dmg.py  # Create DMG installer
+```
+
+### Testing PyQt6 Version
+```bash
+cd camera_test_suite
+python3 main_pyqt6.py  # Run PyQt6 version directly
+python3 launch_pyqt6.py  # Alternative launcher
 ```
 
 ### Dependencies
+- **PyQt6** - Modern native GUI framework
 - **OpenCV** - Camera interface and image processing
 - **NumPy** - Numerical computations
 - **Pillow** - Image manipulation
@@ -185,7 +198,16 @@ cd kamv2
 
 ## 📈 Version History
 
-### v2.0 (Current)
+### v4.0 (Current) - PyQt6 Professional Edition
+- 🎨 **Complete GUI Rewrite** - Modern PyQt6 native interface
+- 🧵 **Non-blocking UI** - Threaded camera and test operations
+- 📏 **Responsive Design** - Resizable panels and professional layout
+- 🖥️ **Native Platform Integration** - macOS-native dialogs and styling
+- 🚀 **Enhanced Performance** - GPU-accelerated rendering where available
+- 📦 **Updated Installer** - Automatic PyQt6 dependency management
+- 🔧 **Improved Error Handling** - Professional dialog-based error reporting
+
+### v2.0
 - ✨ **Professional Logo & Branding** - Custom designed icon set
 - 🚀 **Enhanced Installer** - Streamlined installation process
 - 🔧 **Improved Stability** - Fixed GUI and crash issues

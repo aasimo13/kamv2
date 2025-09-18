@@ -258,7 +258,70 @@ def check_camera_permissions(self):
 - **Professional Appearance**: Camera industry-standard interface
 - **Error Recovery**: Robust handling of camera disconnections
 
-## Distribution Summary
-- **End Users**: Download `USB_Camera_Tester_Installer_v2.0.dmg` from GitHub
-- **Developers**: Clone repository and run `./build_installer.sh`
-- **Commercial Use**: Ready for photobooth camera validation workflows
+## v4.0 MAJOR UPDATE - PyQt6 Professional GUI Upgrade 🎨
+
+### LATEST SESSION: Complete GUI Framework Migration
+**Date**: September 2025
+**Objective**: Upgrade from outdated Tkinter to modern PyQt6 professional interface
+
+### 🚀 PyQt6 Migration Achievements
+1. ✅ **Complete GUI Rewrite** - Migrated entire interface from Tkinter to PyQt6
+2. ✅ **Professional Native Interface** - Platform-native macOS styling and controls
+3. ✅ **Non-blocking Architecture** - Threaded camera operations prevent UI freezing
+4. ✅ **Responsive Design** - Resizable panels with splitter controls
+5. ✅ **Enhanced Error Handling** - Native dialog boxes for professional experience
+6. ✅ **Installer Update** - Modified to download and install PyQt6 automatically
+7. ✅ **New DMG Package** - Created `USB_Camera_Tester_v4.0_PyQt6.dmg`
+
+### 🔧 Technical Implementation
+**New Files Created:**
+- `camera_test_suite/main_pyqt6.py` - Complete PyQt6 rewrite (1000+ lines)
+- `camera_test_suite/launch_pyqt6.py` - PyQt6 launcher script
+- `create_dmg.py` - Professional DMG creation utility
+- `USB_Camera_Tester_v4.0_PyQt6.dmg` - Production installer package
+
+**Key PyQt6 Features:**
+- **Professional Menu Bar** - File, Camera, and Help menus
+- **Threaded Operations** - CameraThread and TestWorker classes
+- **Modern Styling** - CSS-like styling with gradients and modern colors
+- **Native Dialogs** - QMessageBox and QFileDialog integration
+- **Resizable Interface** - QSplitter-based layout with adjustable panels
+- **Tree View Results** - Professional test results display
+
+### 📦 Updated Distribution
+**v4.0 Package Contents:**
+- Professional DMG with README and Applications alias
+- Updated installer with PyQt6 dependency management
+- Native macOS app bundle with PyQt6 launcher
+- Version 4.0 branding throughout
+
+**Installation Process:**
+1. Mount `USB_Camera_Tester_v4.0_PyQt6.dmg`
+2. Run `USB Camera Tester Installer.py`
+3. Installer automatically downloads PyQt6 version from GitHub
+4. Creates professional native macOS application
+5. All test functionality preserved and enhanced
+
+### 🎯 User Experience Improvements
+- **Native macOS Feel** - Looks and behaves like professional desktop software
+- **No More Blocking** - Camera tests run in background without freezing UI
+- **Professional Styling** - Modern gradients, proper typography, native controls
+- **Better Error Messages** - Clear dialog boxes instead of console errors
+- **Export Functionality** - Native file save dialogs for results
+
+### 🔄 Version Comparison
+**v2.0 (Tkinter)** → **v4.0 (PyQt6)**
+- Basic GUI → Professional native interface
+- Blocking operations → Threaded non-blocking
+- Fixed layout → Resizable responsive design
+- Console errors → Native error dialogs
+- Python styling → Platform-native appearance
+
+## Distribution Summary (Updated)
+- **End Users**: Download `USB_Camera_Tester_v4.0_PyQt6.dmg` from GitHub
+- **Developers**: Clone repository and run `python3 create_dmg.py`
+- **Testing**: Run `python3 camera_test_suite/main_pyqt6.py` directly
+- **Commercial Use**: Professional-grade interface ready for client deployments
+
+## Current Status: v4.0 PyQt6 Professional Edition ✅🚀
+**All updates committed to GitHub and ready for distribution**
