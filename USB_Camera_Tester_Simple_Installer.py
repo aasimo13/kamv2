@@ -61,7 +61,8 @@ class SimpleNativeInstaller:
         # Welcome dialog
         welcome_msg = """Welcome to USB Camera Hardware Test Suite Installer!
 
-This installer will:
+This installer will automatically:
+• Install Python 3 if not present (may require admin password)
 • Download the latest version from GitHub
 • Install all required Python dependencies
 • Create a professional macOS application
@@ -125,13 +126,20 @@ Would you like to launch the application now?"""
             result = self.show_dialog("Installation Complete", success_msg,
                                     ["Launch", "Don't Launch"], "Launch")
 
-            if result == "button returned:Launch":
+            if result == "Launch":
                 try:
+                    self.show_progress("Launching USB Camera Tester...")
+                    # Give the installer dialog time to close
+                    time.sleep(0.5)
+
                     # Try to launch the application
                     launch_result = subprocess.run(["open", self.final_app_path],
-                                                 capture_output=True, text=True, timeout=10)
-                    if launch_result.returncode != 0:
-                        error_msg = f"Failed to launch application: {launch_result.stderr}"
+                                                 capture_output=True, text=True, timeout=15)
+                    if launch_result.returncode == 0:
+                        self.show_progress("✓ Application launched successfully")
+                    else:
+                        error_msg = f"Failed to launch: {launch_result.stderr}"
+                        self.show_progress(f"Launch failed: {error_msg}")
                         self.show_dialog("Launch Error",
                                        f"Could not launch the application automatically.\n\n"
                                        f"Error: {error_msg}\n\n"
@@ -161,14 +169,76 @@ Would you like to launch the application now?"""
             self.cleanup_temp_files()
 
     def check_system_requirements(self):
-        """Check if system meets requirements"""
+        """Check if system meets requirements and install Python if needed"""
+        # Check if Python 3 is available
+        python_found = False
+        for python_cmd in ['python3', 'python']:
+            try:
+                result = subprocess.run([python_cmd, '--version'],
+                                      capture_output=True, text=True)
+                if result.returncode == 0 and 'Python 3' in result.stdout:
+                    python_version = result.stdout.strip()
+                    self.show_progress(f"Found {python_version}")
+                    python_found = True
+                    break
+            except FileNotFoundError:
+                continue
+
+        if not python_found:
+            self.show_progress("Python 3 not found. Installing Python automatically...")
+            self.install_python()
+
+        # Verify Python is now available
         result = subprocess.run([sys.executable, '--version'],
                                capture_output=True, text=True)
         if result.returncode == 0:
             python_version = result.stdout.strip()
-            self.show_progress(f"Python version: {python_version}")
+            self.show_progress(f"Using Python: {python_version}")
         else:
-            raise Exception("Python installation not found")
+            raise Exception("Python installation verification failed")
+
+    def install_python(self):
+        """Download and install Python 3 from python.org"""
+        python_url = "https://www.python.org/ftp/python/3.11.6/python-3.11.6-macos11.pkg"
+        pkg_path = os.path.join(self.temp_dir, "python_installer.pkg")
+
+        self.show_progress("Downloading Python 3.11.6 installer...")
+
+        try:
+            # Download Python installer
+            urllib.request.urlretrieve(python_url, pkg_path)
+            self.show_progress("Python installer downloaded")
+
+            # Install Python using installer
+            self.show_progress("Installing Python (requires admin password)...")
+            install_result = subprocess.run([
+                "sudo", "installer", "-pkg", pkg_path, "-target", "/"
+            ], capture_output=True, text=True)
+
+            if install_result.returncode == 0:
+                self.show_progress("✓ Python installed successfully")
+                # Update PATH for current session
+                os.environ["PATH"] = f"/usr/local/bin:{os.environ.get('PATH', '')}"
+            else:
+                raise Exception(f"Python installation failed: {install_result.stderr}")
+
+        except Exception as e:
+            # If automatic install fails, show dialog for manual installation
+            error_msg = f"Automatic Python installation failed: {str(e)}"
+            self.show_progress(error_msg)
+
+            choice = self.show_dialog(
+                "Python Installation Required",
+                f"Could not install Python automatically.\n\n"
+                f"Please install Python 3 manually from python.org and run this installer again.\n\n"
+                f"Would you like to open python.org now?",
+                ["Open python.org", "Cancel"], "Open python.org"
+            )
+
+            if choice == "Open python.org":
+                subprocess.run(["open", "https://python.org/downloads/"])
+
+            raise Exception("Python installation required")
 
     def download_application(self):
         """Download the latest version from GitHub"""
