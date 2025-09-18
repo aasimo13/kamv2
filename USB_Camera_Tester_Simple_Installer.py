@@ -59,13 +59,15 @@ class SimpleNativeInstaller:
         """Run the complete installation with native dialogs"""
 
         # Welcome dialog
-        welcome_msg = """Welcome to USB Camera Hardware Test Suite Installer!
+        welcome_msg = """Welcome to USB Camera Hardware Test Suite v4.0 Installer!
+
+🚀 NEW: Professional PyQt6 Native GUI Interface
 
 This installer will automatically:
 • Install Python 3 if not present (may require admin password)
-• Download the latest version from GitHub
-• Install all required Python dependencies
-• Create a professional macOS application
+• Download the latest PyQt6 version from GitHub
+• Install all required dependencies (including PyQt6)
+• Create a professional native macOS application
 • Install to your Applications folder
 
 Click 'Install' to begin or 'Cancel' to exit."""
@@ -290,7 +292,8 @@ Would you like to launch the application now?"""
             "Pillow",
             "matplotlib",
             "psutil",
-            "reportlab"
+            "reportlab",
+            "PyQt6"
         ]
 
         for package in packages:
@@ -364,10 +367,10 @@ cd "$RESOURCES_DIR/camera_test_suite"
 
 # Launch the application with proper error handling
 echo "Starting USB Camera Tester with $PYTHON_CMD"
-if ! "$PYTHON_CMD" main.py "$@" 2>/tmp/usb_camera_error.log; then
+if ! "$PYTHON_CMD" main_pyqt6.py "$@" 2>/tmp/usb_camera_error.log; then
     ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
     echo "Error: $ERROR_MSG"
-    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
+    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main_pyqt6.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
     exit 1
 fi
 '''
@@ -389,9 +392,9 @@ fi
     <key>CFBundleName</key>
     <string>{self.app_name}</string>
     <key>CFBundleVersion</key>
-    <string>2.0</string>
+    <string>4.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.0</string>
+    <string>4.0</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>
