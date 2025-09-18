@@ -454,16 +454,16 @@ Camera permissions may be required."""
                                activeforeground=self.colors['accent_blue'])
             cb.pack(anchor="w", padx=10, pady=2)
 
-        # Test control buttons - fixed position at bottom
+        # Test control buttons - prominent position with more padding
         btn_frame = tk.Frame(test_frame, bg=self.colors['bg_medium'])
-        btn_frame.pack(fill="x", side="bottom", pady=10)
+        btn_frame.pack(fill="x", side="bottom", pady=(20, 10))
 
         self.create_button(btn_frame, "▶ Run Selected Tests", self.run_selected_tests,
-                          style='Success.TButton').pack(fill="x", pady=2)
+                          style='Success.TButton').pack(fill="x", pady=3, ipady=5)
         self.create_button(btn_frame, "▶ Run All Tests", self.run_all_tests,
-                          style='Modern.TButton').pack(fill="x", pady=2)
+                          style='Modern.TButton').pack(fill="x", pady=3, ipady=5)
         self.create_button(btn_frame, "■ Stop Testing", self.stop_tests,
-                          style='Danger.TButton').pack(fill="x", pady=2)
+                          style='Danger.TButton').pack(fill="x", pady=3, ipady=5)
 
         # Progress bar
         self.progress_var = tk.DoubleVar()
@@ -493,8 +493,9 @@ Camera permissions may be required."""
         control_frame = tk.Frame(preview_frame, bg=self.colors['bg_medium'])
         control_frame.pack(fill="x")
 
-        self.create_button(control_frame, "Start Preview", self.toggle_preview,
-                          style='Modern.TButton').pack(side="left", padx=2)
+        self.preview_btn = self.create_button(control_frame, "Start Preview", self.toggle_preview,
+                          style='Modern.TButton')
+        self.preview_btn.pack(side="left", padx=2)
         self.create_button(control_frame, "Capture Image", self.capture_image,
                           style='Modern.TButton').pack(side="left", padx=2)
         self.create_button(control_frame, "Record Video", self.toggle_recording,
@@ -929,8 +930,12 @@ python3 main_enhanced.py"""
 
         if self.preview_running:
             self.preview_running = False
+            self.preview_btn.configure(text="Start Preview")
+            self.update_status("Preview stopped")
         else:
             self.preview_running = True
+            self.preview_btn.configure(text="Stop Preview")
+            self.update_status("Preview started")
             threading.Thread(target=self.preview_loop, daemon=True).start()
 
     def preview_loop(self):
