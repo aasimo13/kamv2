@@ -294,10 +294,10 @@ cd "$RESOURCES_DIR/camera_test_suite"
 
 # Launch the application with proper error handling
 echo "Starting USB Camera Tester with $PYTHON_CMD"
-if ! "$PYTHON_CMD" main_enhanced.py "$@" 2>/tmp/usb_camera_error.log; then
+if ! "$PYTHON_CMD" main.py "$@" 2>/tmp/usb_camera_error.log; then
     ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
     echo "Error: $ERROR_MSG"
-    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main_enhanced.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
+    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
     exit 1
 fi
 '''
