@@ -1,44 +1,42 @@
 #!/bin/bash
+
+# This launcher properly handles macOS app bundle execution from Finder
+# Get absolute path to script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOURCES_DIR="$SCRIPT_DIR/../Resources"
+APP_DIR="$RESOURCES_DIR/camera_test_suite"
 
-# Ensure we have a proper GUI environment
-export DISPLAY=${DISPLAY:-:0}
+# Ensure we're in the correct working directory
+cd "$APP_DIR" || exit 1
 
-# Clear Claude Code environment variables that prevent GUI
-unset CLAUDECODE
-unset CLAUDE_CODE
-unset CLAUDE_CODE_SSE_PORT
-unset CLAUDE_CODE_ENTRYPOINT
+# Set up PATH to include Python locations
+export PATH="/Library/Frameworks/Python.framework/Versions/3.13/bin:/Library/Frameworks/Python.framework/Versions/Current/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-# Find Python executable - prefer user-installed versions over system
-PYTHON_CMD=""
-for python_path in /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 /Library/Frameworks/Python.framework/Versions/*/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 python3 /usr/bin/python3 python; do
-    if command -v "$python_path" &> /dev/null; then
-        # Test if this Python can import numpy (check for architecture compatibility)
-        if "$python_path" -c "import numpy" 2>/dev/null; then
-            PYTHON_CMD="$python_path"
-            echo "Found compatible Python: $PYTHON_CMD"
-            break
-        else
-            echo "Python $python_path has architecture issues, trying next..."
-        fi
+# Set PYTHONPATH to include our app directory
+export PYTHONPATH="$APP_DIR:$PYTHONPATH"
+
+# Clear environment variables that might interfere with GUI
+unset CLAUDECODE CLAUDE_CODE CLAUDE_CODE_SSE_PORT CLAUDE_CODE_ENTRYPOINT
+
+# Find Python executable
+for python_candidate in \
+    "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3" \
+    "/Library/Frameworks/Python.framework/Versions/Current/bin/python3" \
+    "/opt/homebrew/bin/python3" \
+    "/usr/local/bin/python3" \
+    "python3"
+do
+    if command -v "$python_candidate" >/dev/null 2>&1; then
+        PYTHON_CMD="$python_candidate"
+        break
     fi
 done
 
+# Check if we found Python
 if [ -z "$PYTHON_CMD" ]; then
-    osascript -e 'display dialog "Python 3 is required but not found. Please install Python from python.org" buttons {"OK"} default button "OK" with icon stop'
+    /usr/bin/osascript -e 'display dialog "Python 3 is required but not found.\n\nPlease install Python 3.13 from python.org" buttons {"OK"} default button "OK" with icon stop'
     exit 1
 fi
 
-# Change to the application directory
-cd "$RESOURCES_DIR/camera_test_suite"
-
-# Launch the application with proper error handling
-echo "Starting USB Camera Tester with $PYTHON_CMD"
-if ! "$PYTHON_CMD" main_pyqt6.py "$@" 2>/tmp/usb_camera_error.log; then
-    ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
-    echo "Error: $ERROR_MSG"
-    osascript -e "display dialog "Failed to start USB Camera Tester.\n\nError: $ERROR_MSG\n\nTry running from Terminal: cd \"$RESOURCES_DIR/camera_test_suite\" && python3 main_pyqt6.py" buttons {"OK"} default button "OK" with icon stop"
-    exit 1
-fi
+# Launch the Python app - use exec to run in foreground for proper app bundle behavior
+exec "$PYTHON_CMD" "$APP_DIR/main_pyqt6.py" "$@"

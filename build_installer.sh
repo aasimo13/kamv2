@@ -12,7 +12,7 @@ INSTALLER_NAME="USB Camera Tester Installer"
 BUNDLE_ID="com.usb-camera-tester.installer"
 VERSION="2.0"
 BUILD_DIR="installer_build"
-INSTALLER_SCRIPT="USB_Camera_Tester_Installer.py"
+INSTALLER_SCRIPT="USB_Camera_Tester_Simple_Installer.py"
 
 # Colors for output
 RED='\033[0;31m'

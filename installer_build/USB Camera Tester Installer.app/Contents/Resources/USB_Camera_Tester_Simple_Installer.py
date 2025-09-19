@@ -59,13 +59,17 @@ class SimpleNativeInstaller:
         """Run the complete installation with native dialogs"""
 
         # Welcome dialog
-        welcome_msg = """Welcome to USB Camera Hardware Test Suite Installer!
+        welcome_msg = """Welcome to USB Camera Hardware Test Suite v4.0 Installer!
+
+🚀 NEW: Professional PyQt6 Native GUI Interface
+🍎 ARM64: Optimized for Apple Silicon (M1/M2/M3/M4 Macs)
 
 This installer will automatically:
-• Install Python 3 if not present (may require admin password)
-• Download the latest version from GitHub
-• Install all required Python dependencies
-• Create a professional macOS application
+• Detect your Mac architecture (Apple Silicon vs Intel)
+• Install Python 3.13.7 optimized for your system
+• Download the latest PyQt6 version from GitHub
+• Install all required dependencies (including PyQt6)
+• Create a professional native macOS application
 • Install to your Applications folder
 
 Click 'Install' to begin or 'Cancel' to exit."""
@@ -198,47 +202,335 @@ Would you like to launch the application now?"""
             raise Exception("Python installation verification failed")
 
     def install_python(self):
-        """Download and install Python 3 from python.org"""
-        python_url = "https://www.python.org/ftp/python/3.11.6/python-3.11.6-macos11.pkg"
-        pkg_path = os.path.join(self.temp_dir, "python_installer.pkg")
+        """Download and install Python 3.13.7 from python.org with ARM64 optimization"""
 
-        self.show_progress("Downloading Python 3.11.6 installer...")
+        # Detect system architecture
+        arch = self._detect_system_architecture()
+        self.show_progress(f"Detected system architecture: {arch}")
 
+        # Choose appropriate Python installer based on architecture
+        installation_methods = self._get_python_installers_for_architecture(arch)
+
+        for method in installation_methods:
+            try:
+                self.show_progress(f"Attempting {method['name']}...")
+                success = self._try_python_installation(method)
+                if success:
+                    return
+            except Exception as e:
+                self.show_progress(f"⚠ {method['name']} failed: {str(e)}")
+                continue
+
+        # All automatic methods failed - guide user to manual installation
+        self._handle_python_installation_failure()
+
+    def _try_python_installation(self, method):
+        """Try a specific Python installation method"""
+        pkg_path = os.path.join(self.temp_dir, f"python_{method['version']}_installer.pkg")
+
+        self.show_progress(f"Downloading Python {method['version']} installer...")
+
+        # Download with better error handling
         try:
-            # Download Python installer
-            urllib.request.urlretrieve(python_url, pkg_path)
-            self.show_progress("Python installer downloaded")
+            self._download_with_progress(method["url"], pkg_path)
+            self.show_progress(f"✓ Python {method['version']} installer downloaded")
+        except Exception as e:
+            raise Exception(f"Download failed: {str(e)}")
 
-            # Install Python using installer
-            self.show_progress("Installing Python (requires admin password)...")
-            install_result = subprocess.run([
-                "sudo", "installer", "-pkg", pkg_path, "-target", "/"
-            ], capture_output=True, text=True)
+        # Try installation approaches in order of preference
+        install_approaches = [
+            ("user_install", self._install_python_user_mode),
+            ("admin_install", self._install_python_admin_mode),
+            ("manual_launch", self._install_python_manual_launch)
+        ]
 
-            if install_result.returncode == 0:
-                self.show_progress("✓ Python installed successfully")
-                # Update PATH for current session
-                os.environ["PATH"] = f"/usr/local/bin:{os.environ.get('PATH', '')}"
-            else:
-                raise Exception(f"Python installation failed: {install_result.stderr}")
+        for approach_name, install_func in install_approaches:
+            try:
+                self.show_progress(f"Trying {approach_name.replace('_', ' ')}...")
+                success = install_func(pkg_path, method['version'])
+                if success:
+                    self.show_progress(f"✓ Python {method['version']} installed successfully using {approach_name}")
+                    self._update_python_path()
+                    return True
+            except Exception as e:
+                self.show_progress(f"⚠ {approach_name} failed: {str(e)}")
+                continue
+
+        return False
+
+    def _download_with_progress(self, url, destination):
+        """Download with better SSL handling and error reporting"""
+        try:
+            urllib.request.urlretrieve(url, destination)
+        except (ssl.SSLError, urllib.error.URLError) as e:
+            self.show_progress(f"SSL/URL error, trying alternative method: {e}")
+
+            # Try with unverified SSL context
+            try:
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+
+                opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_context))
+                urllib.request.install_opener(opener)
+                urllib.request.urlretrieve(url, destination)
+            except Exception as e2:
+                # Final fallback using curl
+                self.show_progress("Trying curl download...")
+                result = subprocess.run([
+                    "curl", "-L", "-k", "-o", destination, url
+                ], capture_output=True, text=True, timeout=300)
+
+                if result.returncode != 0:
+                    raise Exception(f"Download failed: {result.stderr}")
+
+    def _install_python_user_mode(self, pkg_path, version):
+        """Try user-mode installation (no admin required)"""
+        # This typically won't work for Python PKG files, but worth trying
+        result = subprocess.run([
+            "installer", "-pkg", pkg_path, "-target", "CurrentUserHomeDirectory"
+        ], capture_output=True, text=True, timeout=300)
+
+        return result.returncode == 0
+
+    def _install_python_admin_mode(self, pkg_path, version):
+        """Try admin installation with better error handling"""
+        self.show_progress("Installing Python (requires admin password)...")
+
+        # Show dialog asking for permission first
+        choice = self.show_dialog(
+            "Administrator Permission Required",
+            f"Python {version} installation requires administrator privileges.\n\n"
+            f"Click 'Continue' to enter your admin password, or 'Skip' to try alternative methods.",
+            ["Continue", "Skip"], "Continue"
+        )
+
+        if choice != "Continue":
+            raise Exception("User declined admin installation")
+
+        result = subprocess.run([
+            "sudo", "installer", "-pkg", pkg_path, "-target", "/"
+        ], capture_output=True, text=True, timeout=600)
+
+        if result.returncode == 0:
+            return True
+        else:
+            error_details = result.stderr or result.stdout or "Unknown error"
+            raise Exception(f"Admin installation failed: {error_details}")
+
+    def _install_python_manual_launch(self, pkg_path, version):
+        """Launch the installer manually for user to complete"""
+        self.show_progress("Launching Python installer for manual completion...")
+
+        choice = self.show_dialog(
+            "Manual Python Installation",
+            f"Automatic installation failed. Would you like to:\n\n"
+            f"1. Launch the Python {version} installer manually\n"
+            f"2. You'll complete the installation yourself\n"
+            f"3. Then return to this installer\n\n"
+            f"Continue with manual installation?",
+            ["Launch Installer", "Cancel"], "Launch Installer"
+        )
+
+        if choice != "Launch Installer":
+            raise Exception("User declined manual installation")
+
+        # Launch the installer
+        subprocess.run(["open", pkg_path])
+
+        # Wait for user to complete installation
+        choice = self.show_dialog(
+            "Python Installation In Progress",
+            f"The Python {version} installer has been launched.\n\n"
+            f"Please complete the Python installation, then click 'Done' to continue.\n\n"
+            f"If the installation was successful, this installer will continue automatically.",
+            ["Done", "Cancel"], "Done"
+        )
+
+        if choice != "Done":
+            raise Exception("User cancelled manual installation")
+
+        # Check if Python is now available
+        return self._verify_python_installation()
+
+    def _verify_python_installation(self):
+        """Verify that Python was successfully installed"""
+        python_candidates = [
+            "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+            "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+            "/opt/homebrew/bin/python3",
+            "/usr/local/bin/python3",
+            "python3"
+        ]
+
+        for python_cmd in python_candidates:
+            try:
+                result = subprocess.run([python_cmd, '--version'],
+                                      capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and 'Python 3' in result.stdout:
+                    version = result.stdout.strip()
+                    self.show_progress(f"✓ Verified Python installation: {version}")
+                    return True
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                continue
+
+        return False
+
+    def _update_python_path(self):
+        """Update PATH to include new Python installation"""
+        python_paths = [
+            "/Library/Frameworks/Python.framework/Versions/3.13/bin",
+            "/Library/Frameworks/Python.framework/Versions/3.12/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin"
+        ]
+
+        current_path = os.environ.get('PATH', '')
+        for path in python_paths:
+            if path not in current_path:
+                os.environ["PATH"] = f"{path}:{current_path}"
+                current_path = os.environ["PATH"]
+
+    def _handle_python_installation_failure(self):
+        """Handle complete Python installation failure with helpful guidance"""
+        error_msg = """All automatic Python installation methods failed.
+
+This can happen due to:
+• Security settings blocking installations
+• Network connectivity issues
+• Insufficient disk space
+• Conflicting existing Python installations
+
+SOLUTION: Manual Python Installation Required"""
+
+        self.show_progress(error_msg)
+
+        choice = self.show_dialog(
+            "Python Installation Required",
+            f"{error_msg}\n\n"
+            f"Click 'Open python.org' to download Python manually, or\n"
+            f"Click 'Show Instructions' for detailed installation steps.",
+            ["Open python.org", "Show Instructions", "Cancel"], "Open python.org"
+        )
+
+        if choice == "Open python.org":
+            subprocess.run(["open", "https://www.python.org/downloads/macos/"])
+
+        elif choice == "Show Instructions":
+            instructions = """Manual Python Installation Instructions:
+
+1. Go to https://www.python.org/downloads/macos/
+2. Download 'macOS 64-bit universal2 installer'
+3. Double-click the downloaded .pkg file
+4. Follow the installation wizard
+5. After installation, restart this installer
+
+The installer will automatically detect the new Python installation."""
+
+            self.show_dialog("Installation Instructions", instructions, ["OK"], "OK")
+
+        raise Exception("Manual Python installation required - please install Python 3.13+ from python.org")
+
+    def _detect_system_architecture(self):
+        """Detect system architecture (ARM64 vs Intel)"""
+        try:
+            # Try multiple methods to detect architecture
+
+            # Method 1: Check processor brand
+            result = subprocess.run(['sysctl', '-n', 'machdep.cpu.brand_string'],
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                brand = result.stdout.strip().lower()
+                if 'apple' in brand or 'm1' in brand or 'm2' in brand or 'm3' in brand or 'm4' in brand:
+                    return 'arm64'
+
+            # Method 2: Check machine hardware name
+            result = subprocess.run(['uname', '-m'], capture_output=True, text=True)
+            if result.returncode == 0:
+                machine = result.stdout.strip().lower()
+                if machine == 'arm64':
+                    return 'arm64'
+                elif machine == 'x86_64':
+                    return 'intel'
+
+            # Method 3: Check architecture using platform
+            import platform
+            machine = platform.machine().lower()
+            if machine == 'arm64':
+                return 'arm64'
+            elif machine in ['x86_64', 'amd64']:
+                return 'intel'
+
+            # Method 4: Check processor info (fallback)
+            result = subprocess.run(['sysctl', '-n', 'hw.optional.arm64'],
+                                  capture_output=True, text=True)
+            if result.returncode == 0 and '1' in result.stdout:
+                return 'arm64'
 
         except Exception as e:
-            # If automatic install fails, show dialog for manual installation
-            error_msg = f"Automatic Python installation failed: {str(e)}"
-            self.show_progress(error_msg)
+            self.show_progress(f"⚠ Architecture detection error: {e}")
 
-            choice = self.show_dialog(
-                "Python Installation Required",
-                f"Could not install Python automatically.\n\n"
-                f"Please install Python 3 manually from python.org and run this installer again.\n\n"
-                f"Would you like to open python.org now?",
-                ["Open python.org", "Cancel"], "Open python.org"
-            )
+        # Default fallback - assume universal installer will work
+        self.show_progress("⚠ Could not detect architecture, using universal installer")
+        return 'universal'
 
-            if choice == "Open python.org":
-                subprocess.run(["open", "https://python.org/downloads/"])
+    def _get_python_installers_for_architecture(self, arch):
+        """Get appropriate Python installers based on system architecture"""
 
-            raise Exception("Python installation required")
+        if arch == 'arm64':
+            # ARM64 (Apple Silicon) - prioritize ARM64 optimized versions
+            return [
+                {
+                    "name": "Python 3.13.7 ARM64 (Apple Silicon Optimized)",
+                    "url": "https://www.python.org/ftp/python/3.13.7/python-3.13.7-macos11.pkg",
+                    "version": "3.13.7",
+                    "arch": "arm64"
+                },
+                {
+                    "name": "Python 3.13.6 ARM64 (Fallback)",
+                    "url": "https://www.python.org/ftp/python/3.13.6/python-3.13.6-macos11.pkg",
+                    "version": "3.13.6",
+                    "arch": "arm64"
+                },
+                {
+                    "name": "Python 3.13.0 Universal (Final Fallback)",
+                    "url": "https://www.python.org/ftp/python/3.13.0/python-3.13.0-macos11.pkg",
+                    "version": "3.13.0",
+                    "arch": "universal"
+                }
+            ]
+        elif arch == 'intel':
+            # Intel x86_64 - use universal installers
+            return [
+                {
+                    "name": "Python 3.13.7 Universal (Intel Compatible)",
+                    "url": "https://www.python.org/ftp/python/3.13.7/python-3.13.7-macos11.pkg",
+                    "version": "3.13.7",
+                    "arch": "universal"
+                },
+                {
+                    "name": "Python 3.13.6 Universal (Fallback)",
+                    "url": "https://www.python.org/ftp/python/3.13.6/python-3.13.6-macos11.pkg",
+                    "version": "3.13.6",
+                    "arch": "universal"
+                }
+            ]
+        else:
+            # Universal fallback for unknown architectures
+            return [
+                {
+                    "name": "Python 3.13.7 Universal Installer",
+                    "url": "https://www.python.org/ftp/python/3.13.7/python-3.13.7-macos11.pkg",
+                    "version": "3.13.7",
+                    "arch": "universal"
+                },
+                {
+                    "name": "Python 3.13.6 Universal (Fallback)",
+                    "url": "https://www.python.org/ftp/python/3.13.6/python-3.13.6-macos11.pkg",
+                    "version": "3.13.6",
+                    "arch": "universal"
+                }
+            ]
 
     def download_application(self):
         """Download the latest version from GitHub"""
@@ -290,19 +582,74 @@ Would you like to launch the application now?"""
             "Pillow",
             "matplotlib",
             "psutil",
-            "reportlab"
+            "reportlab",
+            "PyQt6"
         ]
+
+        # Upgrade pip first
+        self.show_progress("Upgrading pip...")
+        try:
+            subprocess.run([
+                sys.executable, "-m", "pip", "install", "--upgrade", "pip"
+            ], capture_output=True, text=True, check=True)
+            self.show_progress("✓ Pip upgraded")
+        except subprocess.CalledProcessError as e:
+            self.show_progress(f"⚠ Pip upgrade failed: {e}")
+
+        failed_packages = []
 
         for package in packages:
             self.show_progress(f"Installing {package}...")
-            result = subprocess.run([
-                sys.executable, "-m", "pip", "install", package
-            ], capture_output=True, text=True)
+            try:
+                result = subprocess.run([
+                    sys.executable, "-m", "pip", "install",
+                    "--upgrade", "--user", package
+                ], capture_output=True, text=True, timeout=120)
 
-            if result.returncode == 0:
-                self.show_progress(f"✓ Installed {package}")
-            else:
-                self.show_progress(f"✗ Failed to install {package}")
+                if result.returncode == 0:
+                    self.show_progress(f"✓ Installed {package}")
+
+                    # Verify the package can be imported
+                    try:
+                        if package == "opencv-python":
+                            subprocess.run([sys.executable, "-c", "import cv2"],
+                                         check=True, capture_output=True)
+                        elif package == "PyQt6":
+                            subprocess.run([sys.executable, "-c", "import PyQt6"],
+                                         check=True, capture_output=True)
+                        else:
+                            subprocess.run([sys.executable, "-c", f"import {package}"],
+                                         check=True, capture_output=True)
+                        self.show_progress(f"✓ Verified {package} import")
+                    except subprocess.CalledProcessError:
+                        self.show_progress(f"⚠ {package} installed but import failed")
+
+                else:
+                    self.show_progress(f"✗ Failed to install {package}: {result.stderr}")
+                    failed_packages.append(package)
+
+            except subprocess.TimeoutExpired:
+                self.show_progress(f"✗ Installation of {package} timed out")
+                failed_packages.append(package)
+            except Exception as e:
+                self.show_progress(f"✗ Error installing {package}: {e}")
+                failed_packages.append(package)
+
+        if failed_packages:
+            self.show_progress(f"⚠ Some packages failed to install: {', '.join(failed_packages)}")
+
+            # Show dialog about failed packages
+            failed_list = '\\n'.join(failed_packages)
+            choice = self.show_dialog(
+                "Installation Warning",
+                f"Some packages failed to install:\\n\\n{failed_list}\\n\\nThe application might not work properly. Continue anyway?",
+                ["Continue", "Cancel"], "Continue"
+            )
+
+            if choice != "Continue":
+                raise Exception("Installation cancelled due to failed dependencies")
+        else:
+            self.show_progress("✓ All dependencies installed successfully")
 
     def create_app_bundle(self):
         """Create proper macOS application bundle"""
@@ -364,10 +711,10 @@ cd "$RESOURCES_DIR/camera_test_suite"
 
 # Launch the application with proper error handling
 echo "Starting USB Camera Tester with $PYTHON_CMD"
-if ! "$PYTHON_CMD" main.py "$@" 2>/tmp/usb_camera_error.log; then
+if ! "$PYTHON_CMD" main_pyqt6.py "$@" 2>/tmp/usb_camera_error.log; then
     ERROR_MSG=$(cat /tmp/usb_camera_error.log 2>/dev/null || echo "Unknown error occurred")
     echo "Error: $ERROR_MSG"
-    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
+    osascript -e "display dialog \"Failed to start USB Camera Tester.\\n\\nError: $ERROR_MSG\\n\\nTry running from Terminal: cd \\\"$RESOURCES_DIR/camera_test_suite\\\" && python3 main_pyqt6.py\" buttons {\"OK\"} default button \"OK\" with icon stop"
     exit 1
 fi
 '''
@@ -389,9 +736,9 @@ fi
     <key>CFBundleName</key>
     <string>{self.app_name}</string>
     <key>CFBundleVersion</key>
-    <string>2.0</string>
+    <string>4.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.0</string>
+    <string>4.0</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>

@@ -395,3 +395,82 @@ def check_camera_permissions(self):
 
 ## Current Status: v4.0.1 ARM64 Professional Edition ✅🚀
 **Perfect for Apple Silicon Macs - All updates committed to GitHub and ready for distribution**
+
+## LATEST SESSION UPDATE: App Launch & Permission Issues RESOLVED ✅ (September 2025)
+
+### CRITICAL FIXES IMPLEMENTED:
+
+#### **1. App Launch Blocking Issue (FIXED ✅)**
+**Problem**: App wouldn't launch - hanging indefinitely after clicking
+**Root Cause**: Permission checking on UI startup thread was blocking the entire application
+**Solution Applied**:
+- Removed automatic permission checking on app startup
+- Permission check now only happens when user tries to access camera
+- Simplified permission dialog logic (removed complex retry loops)
+- App now launches instantly without hanging
+
+#### **2. Permission System Overhaul (FIXED ✅)**
+**Problem**: Permission dialogs showing 3 times, app not appearing in Camera settings
+**Root Cause**: Overly complex permission retry system and startup thread blocking
+**Solution Applied**:
+- Streamlined permission check to simple one-time dialog
+- Added proper macOS permission request trigger via OpenCV camera access
+- Enhanced Info.plist with detailed camera usage description
+- Added NSCameraUseContinuityCameraDeviceType for Continuity Camera support
+
+#### **3. App Bundle Launcher Improvements (FIXED ✅)**
+**Problem**: App launching as Python script instead of proper macOS app bundle
+**Root Cause**: Launcher script not properly executing in app bundle context
+**Solution Applied**:
+- Updated launcher to use `exec` for foreground execution
+- Proper PATH and PYTHONPATH setup for app bundle context
+- Removed complex architecture checking that was causing issues
+- Streamlined Python executable detection
+
+#### **4. Repository Cleanup (COMPLETED ✅)**
+**Problem**: Repository cluttered with old test files and duplicate installers
+**Solution Applied**:
+- Removed all unnecessary test files (test_*.py, minimal_test.py, etc.)
+- Cleaned up old installer variants
+- Removed outdated DMG files
+- Kept only essential working files
+- Updated repository with latest working versions
+
+### **Technical Implementation Details:**
+
+**Permission Flow (New Simplified Version):**
+```python
+def check_camera_permissions():
+    """Simple permission check - triggers macOS dialog when needed"""
+    if platform.system() == "Darwin":
+        try:
+            test_cap = cv2.VideoCapture(0)
+            has_access = test_cap.isOpened()
+            test_cap.release()
+            return has_access
+        except Exception:
+            return False
+    return True
+```
+
+**App Launch Flow:**
+1. **Instant Launch** - No startup permission checking
+2. **Ready State** - App opens immediately to "Ready for testing"
+3. **Permission on Demand** - Only checks when user clicks "Auto-detect Camera"
+4. **Clear Dialogs** - Simple retry/cancel options with helpful instructions
+
+**For Colleague Distribution:**
+✅ **App launches immediately** without hanging or blocking
+✅ **Permission prompt appears** only when needed (first camera access)
+✅ **Clear instructions** guide users through permission granting
+✅ **Professional experience** with proper macOS app bundle behavior
+✅ **Clean repository** ready for distribution and collaboration
+
+## Files Status (Updated):
+- **main_pyqt6.py** - ✅ Fixed app launch and permission system
+- **USBCameraTester** - ✅ Improved launcher script
+- **Info.plist** - ✅ Enhanced camera permission descriptions
+- **Repository** - ✅ Cleaned up unnecessary files
+- **All test files** - ✅ Removed (test_*.py, duplicates, old installers)
+
+**Ready for Final Distribution** 🚀

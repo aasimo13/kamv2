@@ -34,6 +34,20 @@ from PyQt6.QtGui import (
     QBrush, QLinearGradient, QRadialGradient
 )
 
+def check_camera_permissions():
+    """Check camera permissions and trigger permission request if needed (macOS)"""
+    if platform.system() == "Darwin":  # macOS
+        try:
+            # Just try to open the camera - this will trigger permission request
+            test_cap = cv2.VideoCapture(0)
+            has_access = test_cap.isOpened()
+            test_cap.release()
+            return has_access
+        except Exception as e:
+            print(f"Camera permission check failed: {e}")
+            return False
+    return True  # Assume permissions OK on other platforms
+
 
 class TestStatus(Enum):
     PASS = "PASS"
@@ -742,45 +756,86 @@ class ProfessionalCameraTestGUI(QMainWindow):
             }
         """)
 
+
     # Camera control methods
     def auto_detect_camera(self):
-        """Auto-detect cameras"""
+        """Auto-detect cameras with permission checking"""
+        # First verify we have camera permissions on macOS
+        if platform.system() == "Darwin":
+            if not check_camera_permissions():
+                reply = QMessageBox.information(self, "Camera Permission Required",
+                    "🎥 Camera Access Required\n\n"
+                    "This app needs camera access to test USB camera hardware.\n\n"
+                    "When prompted by macOS, please click 'OK' to grant camera access.\n\n"
+                    "If no prompt appears, you can manually grant access in:\n"
+                    "System Preferences → Security & Privacy → Camera\n\n"
+                    "Click 'Retry' after granting permission, or 'Cancel' to skip.",
+                    QMessageBox.StandardButton.Retry | QMessageBox.StandardButton.Cancel)
+
+                if reply == QMessageBox.StandardButton.Retry:
+                    # Try again after user grants permission
+                    if not check_camera_permissions():
+                        QMessageBox.warning(self, "Permission Still Required",
+                            "Camera access is still not available.\n\n"
+                            "Please manually grant permission in:\n"
+                            "System Preferences → Security & Privacy → Camera")
+                        return
+                else:
+                    return
+
         self.status_bar.showMessage("Scanning for cameras...")
 
-        # Detect cameras using direct OpenCV first
+        # Detect cameras using proven working method
         cameras_found = []
+        camera_details = []
+
         for i in range(10):
             cap = cv2.VideoCapture(i)
             if cap.isOpened():
+                # For permission-verified access, try reading a frame
                 ret, frame = cap.read()
                 if ret and frame is not None:
+                    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                    height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
                     cameras_found.append(i)
-                    print(f"Found working camera at index {i}")
+                    camera_details.append(f"Camera {i}: {int(width)}x{int(height)}")
+                    print(f"Found working camera at index {i} ({int(width)}x{int(height)})")
+                else:
+                    # Camera opens but no frame - might be permission issue or busy
+                    print(f"Camera {i}: opened but no frame available")
                 cap.release()
+            # Add small delay between camera checks
+            time.sleep(0.1)
 
         if cameras_found:
             # Connect to the first working camera
             camera_index = cameras_found[0]
+            self.status_bar.showMessage(f"Found {len(cameras_found)} cameras, connecting to camera {camera_index}...")
+
+            # Use the threaded connection method
             if self.camera_thread.connect_camera(camera_index):
-                self.status_bar.showMessage(f"Connected to camera {camera_index} (found {len(cameras_found)} total)")
+                self.status_bar.showMessage(f"✅ Connected to camera {camera_index} (found {len(cameras_found)} total)")
                 return
             else:
-                # If thread connection failed, try direct connection
+                # If threaded connection failed, try direct connection as fallback
                 self.camera_thread.camera = cv2.VideoCapture(camera_index)
                 if self.camera_thread.camera.isOpened():
                     self.camera_thread.camera_index = camera_index
                     width = self.camera_thread.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
                     height = self.camera_thread.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
                     self.camera_thread.camera_connected.emit(camera_index, f"{int(width)}x{int(height)}")
-                    self.status_bar.showMessage(f"Connected to camera {camera_index}")
+                    self.status_bar.showMessage(f"✅ Connected to camera {camera_index} (direct connection)")
                     return
 
-        self.status_bar.showMessage("No cameras found - check connections and permissions")
-        QMessageBox.warning(self, "Camera Detection",
-                           "No cameras found. Please check:\n\n"
-                           "1. USB connection\n"
-                           "2. Camera permissions\n"
-                           "3. Camera is not in use by another application")
+        # No working cameras found
+        self.status_bar.showMessage("❌ No working cameras found")
+        QMessageBox.warning(self, "No Cameras Found",
+                           "No working cameras detected.\n\n"
+                           "Please check:\n"
+                           "• USB camera is connected\n"
+                           "• Camera is not in use by another application\n"
+                           "• Camera drivers are installed\n"
+                           "• Try disconnecting and reconnecting the camera")
 
     def manual_connect_camera(self):
         """Manual camera connection"""
