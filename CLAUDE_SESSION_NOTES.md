@@ -323,5 +323,75 @@ def check_camera_permissions(self):
 - **Testing**: Run `python3 camera_test_suite/main_pyqt6.py` directly
 - **Commercial Use**: Professional-grade interface ready for client deployments
 
-## Current Status: v4.0 PyQt6 Professional Edition ✅🚀
-**All updates committed to GitHub and ready for distribution**
+## LATEST UPDATE: v4.0.1 ARM64 Python 3.13.7 with Professional Installer ✅🚀
+
+### CURRENT SESSION: ARM64 Optimization & Professional Distribution (September 2025)
+**Date**: September 2025
+**Objective**: Fix colleague distribution issues and optimize for Apple Silicon Macs
+
+### 🍎 ARM64 & Professional Installer Achievements
+1. ✅ **Smart Architecture Detection** - Automatic Apple Silicon vs Intel detection
+2. ✅ **ARM64 Python 3.13.7** - Latest Python optimized for M1/M2/M3/M4 Macs
+3. ✅ **Professional App Bundle Installer** - Proper .app executable (not .py script)
+4. ✅ **Complete Uninstaller** - Clean removal tool for troubleshooting
+5. ✅ **Robust Installation Process** - Multi-tier approach with fallbacks
+6. ✅ **Enhanced Error Handling** - User-friendly dialogs and guidance
+7. ✅ **Updated DMG Package** - Professional distribution with installer & uninstaller
+
+### 🔧 Technical Implementation Details
+**Architecture Detection Methods:**
+- CPU brand string detection (Apple M1/M2/M3/M4)
+- uname -m hardware architecture check
+- platform.machine() verification
+- Hardware-specific ARM64 detection
+- Robust fallback to universal installers
+
+**Python Installation Process:**
+- **Latest Python 3.13.7** (upgraded from 3.11.6)
+- **ARM64-optimized** for Apple Silicon performance
+- **Multi-tier installation**:
+  1. User-mode (no admin password required)
+  2. Admin-mode with user consent dialogs
+  3. Manual installer launch with step-by-step guidance
+- **Enhanced dependency management** with verification
+- **SSL/download fallbacks** using curl for reliability
+
+**Professional Distribution Package:**
+- **Executable Installer**: `USB Camera Tester Installer.app` (not .py script)
+- **Complete Uninstaller**: `USB Camera Tester Uninstaller.app`
+- **Professional DMG**: `USB_Camera_Tester_v4.0_PyQt6_Installer.dmg`
+- **Updated Documentation**: README with uninstaller instructions
+
+### 📦 Distribution Package Contents
+**v4.0.1 Package (`USB_Camera_Tester_v4.0_PyQt6_Installer.dmg`):**
+- ✅ `USB Camera Tester Installer.app` - Professional executable installer
+- ✅ `USB Camera Tester Uninstaller.app` - Complete removal tool
+- ✅ Updated README with ARM64 and uninstaller instructions
+- ✅ Applications folder alias for easy installation
+
+### 🎯 Colleague Distribution Improvements
+**Fixed Issues:**
+- **No more .py script** - Now proper executable .app bundle
+- **All dependencies installed** - Enhanced pip management with verification
+- **ARM64 optimization** - Best performance on Apple Silicon Macs
+- **Professional uninstaller** - Clean removal for troubleshooting
+- **Better error handling** - Clear dialogs instead of cryptic errors
+
+**Installation Workflow:**
+1. **Download DMG** from GitHub
+2. **Optional**: Run Uninstaller first for clean installation
+3. **Double-click Installer.app** (professional executable)
+4. **Automatic detection** of Mac architecture
+5. **Smart Python installation** with optimal version for hardware
+6. **Professional PyQt6 app** created in Applications folder
+
+### 🚀 User Experience Improvements
+- **Native macOS feel** - Professional app bundles with proper icons
+- **Architecture awareness** - "Detected system architecture: arm64"
+- **Clear progress reporting** - Step-by-step installation feedback
+- **Intelligent fallbacks** - Multiple installation methods for reliability
+- **Professional dialogs** - Native macOS notifications and confirmations
+- **Troubleshooting tools** - Uninstaller for clean reinstalls
+
+## Current Status: v4.0.1 ARM64 Professional Edition ✅🚀
+**Perfect for Apple Silicon Macs - All updates committed to GitHub and ready for distribution**

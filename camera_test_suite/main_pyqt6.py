@@ -89,19 +89,32 @@ class CameraThread(QThread):
             self.camera = cv2.VideoCapture(index, backend)
             if self.camera.isOpened():
                 self.camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-                ret, test_frame = self.camera.read()
-                if ret and test_frame is not None:
-                    self.camera_index = index
-                    self.camera_backend = backend
-                    width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
-                    height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                    self.camera_connected.emit(index, f"{int(width)}x{int(height)}")
-                    return True
 
+                # Give camera time to initialize
+                time.sleep(0.1)
+
+                # Try reading frame multiple times
+                for attempt in range(3):
+                    ret, test_frame = self.camera.read()
+                    if ret and test_frame is not None:
+                        self.camera_index = index
+                        self.camera_backend = backend
+                        width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+                        height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                        self.camera_connected.emit(index, f"{int(width)}x{int(height)}")
+                        return True
+                    time.sleep(0.05)  # Wait between attempts
+
+            if self.camera:
+                self.camera.release()
+                self.camera = None
             self.error_occurred.emit(f"Failed to connect to camera {index}")
             return False
 
         except Exception as e:
+            if self.camera:
+                self.camera.release()
+                self.camera = None
             self.error_occurred.emit(f"Camera connection error: {str(e)}")
             return False
 
@@ -734,10 +747,33 @@ class ProfessionalCameraTestGUI(QMainWindow):
         """Auto-detect cameras"""
         self.status_bar.showMessage("Scanning for cameras...")
 
-        # Try camera indices 0-5
-        for i in range(6):
-            if self.camera_thread.connect_camera(i):
+        # Detect cameras using direct OpenCV first
+        cameras_found = []
+        for i in range(10):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                if ret and frame is not None:
+                    cameras_found.append(i)
+                    print(f"Found working camera at index {i}")
+                cap.release()
+
+        if cameras_found:
+            # Connect to the first working camera
+            camera_index = cameras_found[0]
+            if self.camera_thread.connect_camera(camera_index):
+                self.status_bar.showMessage(f"Connected to camera {camera_index} (found {len(cameras_found)} total)")
                 return
+            else:
+                # If thread connection failed, try direct connection
+                self.camera_thread.camera = cv2.VideoCapture(camera_index)
+                if self.camera_thread.camera.isOpened():
+                    self.camera_thread.camera_index = camera_index
+                    width = self.camera_thread.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+                    height = self.camera_thread.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                    self.camera_thread.camera_connected.emit(camera_index, f"{int(width)}x{int(height)}")
+                    self.status_bar.showMessage(f"Connected to camera {camera_index}")
+                    return
 
         self.status_bar.showMessage("No cameras found - check connections and permissions")
         QMessageBox.warning(self, "Camera Detection",
