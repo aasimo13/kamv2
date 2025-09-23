@@ -105,9 +105,48 @@ if [ -z "$PYTHON_CMD" ]; then
     exit 1
 fi
 
-# Run the app with Python directly (this gets proper permissions)
+# Clean Python environment to avoid import conflicts
+unset PYTHONPATH
+export PYTHONNOUSERSITE=0
+
+# Ensure we're not in any conflicting directories
+echo "Current directory: $(pwd)"
+
+# Test imports before launching
+echo "Testing Python imports..."
+if ! "$PYTHON_CMD" -c "import sys; print('Python version:', sys.version)" 2>/dev/null; then
+    echo "❌ Python test failed"
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
+if ! "$PYTHON_CMD" -c "import numpy; print('✅ numpy version:', numpy.__version__)" 2>/dev/null; then
+    echo "❌ numpy import failed - trying to fix..."
+    # Try with clean environment
+    if ! env -i PATH="$PATH" "$PYTHON_CMD" -c "import numpy; print('✅ numpy fixed')" 2>/dev/null; then
+        echo "❌ numpy still failing. Please reinstall: pip3 install --user --force-reinstall numpy"
+        read -p "Press Enter to exit..."
+        exit 1
+    fi
+fi
+
+if ! "$PYTHON_CMD" -c "import cv2; print('✅ opencv version:', cv2.__version__)" 2>/dev/null; then
+    echo "❌ opencv import failed"
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
+if ! "$PYTHON_CMD" -c "import PyQt6; print('✅ PyQt6 imported successfully')" 2>/dev/null; then
+    echo "❌ PyQt6 import failed"
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
+echo "✅ All imports successful"
+
+# Run the app with clean environment
 echo "Starting USB Camera Tester..."
-"$PYTHON_CMD" main_pyqt6.py
+env -i PATH="$PATH" DISPLAY="$DISPLAY" "$PYTHON_CMD" main_pyqt6.py
 
 echo ""
 echo "App closed."
@@ -234,13 +273,22 @@ if [ ${#MODULES_NEEDED[@]} -gt 0 ]; then
 
     echo "Installing modules with: $PIP_CMD"
 
-    # Install each module
+    # Install each module with specific fixes for common issues
     for module in "${MODULES_NEEDED[@]}"; do
         echo "Installing $module..."
-        if eval "$PIP_CMD install --user '$module'" >/dev/null 2>&1; then
-            echo "✅ $module installed successfully"
+        if [ "$module" = "numpy" ]; then
+            # Force reinstall numpy to avoid conflicts
+            if eval "$PIP_CMD install --user --force-reinstall '$module'" >/dev/null 2>&1; then
+                echo "✅ $module installed successfully (force reinstall)"
+            else
+                echo "⚠️  $module installation may have issues, but continuing..."
+            fi
         else
-            echo "⚠️  $module installation may have issues, but continuing..."
+            if eval "$PIP_CMD install --user '$module'" >/dev/null 2>&1; then
+                echo "✅ $module installed successfully"
+            else
+                echo "⚠️  $module installation may have issues, but continuing..."
+            fi
         fi
     done
 
