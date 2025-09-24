@@ -1,0 +1,204 @@
+{
+  "timestamp": "20250924_070804",
+  "test_results": [
+    {
+      "test_name": "Connection & Detection",
+      "status": "PASS",
+      "message": "Camera connected successfully",
+      "timestamp": "2025-09-24 07:07:43",
+      "details": {
+        "resolution": "1920x1080",
+        "channels": 3
+      },
+      "measurements": {
+        "width": 1920,
+        "height": 1080
+      }
+    },
+    {
+      "test_name": "Resolution Validation",
+      "status": "PASS",
+      "message": "Supported: 1080p, 720p, VGA",
+      "timestamp": "2025-09-24 07:07:43",
+      "details": {},
+      "measurements": {
+        "supported_count": 3
+      }
+    },
+    {
+      "test_name": "Frame Rate Analysis",
+      "status": "PARTIAL",
+      "message": "FPS: 13.5",
+      "timestamp": "2025-09-24 07:07:44",
+      "details": {},
+      "measurements": {
+        "fps": 13.5
+      }
+    },
+    {
+      "test_name": "PDAF Autofocus System",
+      "status": "PASS",
+      "message": "AF system working",
+      "timestamp": "2025-09-24 07:07:47",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "Exposure Control",
+      "status": "PASS",
+      "message": "Exposure control working",
+      "timestamp": "2025-09-24 07:07:47",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "White Balance",
+      "status": "PASS",
+      "message": "WB working",
+      "timestamp": "2025-09-24 07:07:48",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "Image Sharpness",
+      "status": "PASS",
+      "message": "Sharpness: Good",
+      "timestamp": "2025-09-24 07:07:48",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "Noise Analysis",
+      "status": "PASS",
+      "message": "SNR: 35dB",
+      "timestamp": "2025-09-24 07:07:49",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "USB Performance",
+      "status": "PASS",
+      "message": "USB: 450Mbps",
+      "timestamp": "2025-09-24 07:07:49",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "S5KGM1ST Sensor",
+      "status": "PASS",
+      "message": "Sensor features verified",
+      "timestamp": "2025-09-24 07:07:50",
+      "details": {},
+      "measurements": {}
+    },
+    {
+      "test_name": "V4L2 Settings",
+      "status": "SKIP",
+      "message": "V4L2 controls only available on Linux systems",
+      "timestamp": "2025-09-24 07:07:50",
+      "details": {
+        "platform": "Darwin",
+        "v4l2_supported": false
+      },
+      "measurements": {}
+    }
+  ],
+  "camera_specs": {
+    "sensor_model": "Samsung S5KGM1ST ISOCELL GM1",
+    "sensor_type": "CMOS with BSI (Back-Side Illumination)",
+    "optical_format": "1/2 inch",
+    "pixel_count": 48000000,
+    "pixel_size_um": 0.8,
+    "pixel_array": [
+      8000,
+      6000
+    ],
+    "active_array": [
+      7968,
+      5976
+    ],
+    "effective_resolution": [
+      4000,
+      3000
+    ],
+    "field_of_view": 79,
+    "focal_length_mm": 3.5,
+    "aperture": 2.0,
+    "focus_range_cm": [
+      8,
+      "infinity"
+    ],
+    "max_fps": {
+      "48MP": 8,
+      "12MP": 30,
+      "1080p": 60,
+      "720p": 120
+    },
+    "shutter_speed_range": [
+      2e-05,
+      1
+    ],
+    "iso_range": [
+      100,
+      6400
+    ],
+    "dynamic_range_db": 72,
+    "autofocus_type": "PDAF (Phase Detection)",
+    "af_points": 2048,
+    "af_coverage": "95%",
+    "af_speed_ms": 100,
+    "af_accuracy": "\u00b12%",
+    "color_filter": "RGB Bayer (RGGB)",
+    "bit_depth": 12,
+    "color_space": [
+      "sRGB",
+      "Adobe RGB",
+      "DCI-P3"
+    ],
+    "white_balance_range": [
+      2800,
+      10000
+    ],
+    "hdr_support": "Smart-ISO Pro",
+    "binning_modes": [
+      "1x1",
+      "2x2",
+      "4x4"
+    ],
+    "wdr_support": true,
+    "noise_reduction": [
+      "Tetrapixel",
+      "Remosaic",
+      "Smart-ISO"
+    ],
+    "interface": "USB 2.0 High Speed",
+    "bandwidth_mbps": 480,
+    "power_consumption_mw": 850,
+    "formats": [
+      "MJPEG",
+      "YUY2",
+      "NV12",
+      "RAW"
+    ],
+    "operating_temp_c": [
+      -20,
+      70
+    ],
+    "storage_temp_c": [
+      -40,
+      85
+    ],
+    "humidity_range": [
+      10,
+      90
+    ],
+    "target_metrics": {
+      "sharpness_mtf50": 0.35,
+      "noise_snr_db": 38,
+      "color_accuracy_delta_e": 2.0,
+      "distortion_percent": 1.5,
+      "uniformity_percent": 85,
+      "dynamic_range_stops": 12
+    }
+  }
+}

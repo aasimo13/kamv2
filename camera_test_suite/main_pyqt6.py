@@ -777,6 +777,7 @@ class ProfessionalCameraTestGUI(QMainWindow):
         self.stop_tests_btn.clicked.connect(self.stop_tests)
 
         self.export_json_btn.clicked.connect(lambda: self.export_results('json'))
+        self.export_pdf_btn.clicked.connect(lambda: self.export_results('pdf'))
         self.clear_results_btn.clicked.connect(self.clear_results)
 
         # Camera thread connections
@@ -792,50 +793,163 @@ class ProfessionalCameraTestGUI(QMainWindow):
         self.test_worker.all_tests_completed.connect(self.on_all_tests_completed)
 
     def setup_styles(self):
-        """Setup modern styling"""
+        """Setup modern, high-contrast styling for excellent readability"""
         self.setStyleSheet("""
+            /* Main window - dark theme for better contrast */
             QMainWindow {
-                background-color: #f5f5f5;
+                background-color: #2b2b2b;
+                color: #ffffff;
             }
+
+            /* All widgets default colors */
+            QWidget {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+
+            /* Group boxes with clear borders and readable text */
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #cccccc;
-                border-radius: 5px;
-                margin-top: 1ex;
-                padding-top: 10px;
+                font-size: 12px;
+                color: #ffffff;
+                border: 2px solid #4a90e2;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 15px;
+                background-color: #3a3a3a;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
+                left: 15px;
+                padding: 0 8px 0 8px;
+                color: #4a90e2;
+                background-color: #3a3a3a;
             }
+
+            /* Buttons with professional styling */
             QPushButton {
-                border: 1px solid #999999;
-                border-radius: 4px;
-                padding: 6px;
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                           stop: 0 #f6f7fa, stop: 1 #dadbde);
+                border: 2px solid #4a90e2;
+                border-radius: 6px;
+                padding: 8px 16px;
+                background-color: #4a90e2;
+                color: white;
+                font-weight: bold;
+                font-size: 11px;
+                min-height: 20px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                           stop: 0 #dadbde, stop: 1 #f6f7fa);
+                background-color: #357abd;
+                border-color: #357abd;
             }
             QPushButton:pressed {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                           stop: 0 #dadbde, stop: 1 #f6f7fa);
+                background-color: #2968a3;
+                border-color: #2968a3;
             }
+            QPushButton:disabled {
+                background-color: #666666;
+                border-color: #666666;
+                color: #999999;
+            }
+
+            /* Tree widget with high contrast */
             QTreeWidget {
-                alternate-background-color: #f0f0f0;
-                selection-background-color: #3daee9;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #555555;
+                alternate-background-color: #2a2a2a;
+                selection-background-color: #4a90e2;
+                selection-color: white;
+                font-size: 11px;
+                gridline-color: #555555;
             }
+            QTreeWidget::item {
+                padding: 4px;
+                border-bottom: 1px solid #333333;
+            }
+            QTreeWidget::item:selected {
+                background-color: #4a90e2;
+                color: white;
+            }
+            QTreeWidget::item:hover {
+                background-color: #404040;
+            }
+
+            /* Header styling */
+            QHeaderView::section {
+                background-color: #3a3a3a;
+                color: white;
+                border: 1px solid #555555;
+                padding: 6px;
+                font-weight: bold;
+            }
+
+            /* Progress bar with clear visibility */
             QProgressBar {
-                border: 2px solid grey;
-                border-radius: 5px;
+                border: 2px solid #555555;
+                border-radius: 8px;
                 text-align: center;
+                background-color: #1e1e1e;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                min-height: 20px;
             }
             QProgressBar::chunk {
                 background-color: #4CAF50;
-                border-radius: 3px;
+                border-radius: 6px;
+            }
+
+            /* Text areas and displays */
+            QTextEdit, QPlainTextEdit {
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                font-size: 10px;
+                selection-background-color: #4a90e2;
+            }
+
+            /* Labels */
+            QLabel {
+                color: #ffffff;
+                font-size: 11px;
+            }
+
+            /* Status bar */
+            QStatusBar {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border-top: 1px solid #555555;
+            }
+
+            /* Menu bar */
+            QMenuBar {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border-bottom: 1px solid #555555;
+            }
+            QMenuBar::item:selected {
+                background-color: #4a90e2;
+            }
+            QMenu {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border: 1px solid #555555;
+            }
+            QMenu::item:selected {
+                background-color: #4a90e2;
+            }
+
+            /* Splitter handle */
+            QSplitter::handle {
+                background-color: #555555;
+                width: 3px;
+                height: 3px;
+            }
+            QSplitter::handle:hover {
+                background-color: #4a90e2;
             }
         """)
 
@@ -1073,7 +1187,7 @@ class ProfessionalCameraTestGUI(QMainWindow):
         self.run_all_btn.setEnabled(True)
 
     def add_result_to_tree(self, result):
-        """Add test result to tree"""
+        """Add test result to tree with comprehensive details"""
         item = QTreeWidgetItem()
         item.setText(0, result.test_name)
         item.setText(1, result.status.value)
@@ -1083,21 +1197,72 @@ class ProfessionalCameraTestGUI(QMainWindow):
         time_short = f"{time_str[0]}:{time_str[1]}"
         item.setText(2, time_short)
 
-        # Details
-        if result.measurements:
-            key = list(result.measurements.keys())[0]
-            value = result.measurements[key]
-            item.setText(3, f"{value:.1f}" if isinstance(value, float) else str(value))
-        else:
-            item.setText(3, "-")
+        # Enhanced details column with more information
+        details_text = []
 
-        # Color coding
+        # Add primary measurement if available
+        if result.measurements:
+            for key, value in result.measurements.items():
+                if isinstance(value, float):
+                    details_text.append(f"{key}: {value:.2f}")
+                else:
+                    details_text.append(f"{key}: {value}")
+
+        # Add result message if available
+        if hasattr(result, 'message') and result.message:
+            if details_text:
+                details_text.append(f" | {result.message}")
+            else:
+                details_text.append(result.message)
+
+        # Add detailed information for specific test types
+        if hasattr(result, 'details') and result.details:
+            detail_info = []
+            for key, value in result.details.items():
+                if isinstance(value, (int, float)):
+                    if key in ['width', 'height', 'frames']:
+                        detail_info.append(f"{key}:{value}")
+                    else:
+                        detail_info.append(f"{key}:{value:.2f}")
+                else:
+                    detail_info.append(f"{key}:{value}")
+
+            if detail_info:
+                if details_text:
+                    details_text.append(f" | {', '.join(detail_info[:3])}")  # Show first 3 details
+                else:
+                    details_text.append(', '.join(detail_info[:3]))
+
+        # Set the details text or default
+        item.setText(3, ''.join(details_text) if details_text else "-")
+
+        # Enhanced color coding with dark theme compatibility
         if result.status == TestStatus.PASS:
-            item.setBackground(1, QColor(200, 255, 200))
+            item.setBackground(1, QColor(40, 120, 40))  # Dark green
+            item.setForeground(1, QColor(255, 255, 255))  # White text
         elif result.status == TestStatus.FAIL:
-            item.setBackground(1, QColor(255, 200, 200))
+            item.setBackground(1, QColor(120, 40, 40))  # Dark red
+            item.setForeground(1, QColor(255, 255, 255))  # White text
         elif result.status == TestStatus.PARTIAL:
-            item.setBackground(1, QColor(255, 255, 200))
+            item.setBackground(1, QColor(120, 120, 40))  # Dark yellow
+            item.setForeground(1, QColor(255, 255, 255))  # White text
+        elif result.status == TestStatus.SKIP:
+            item.setBackground(1, QColor(80, 80, 80))  # Dark gray
+            item.setForeground(1, QColor(200, 200, 200))  # Light gray text
+
+        # Add expandable child items for detailed information
+        if hasattr(result, 'details') and result.details:
+            for key, value in result.details.items():
+                child = QTreeWidgetItem(item)
+                child.setText(0, f"  └ {key}")
+                if isinstance(value, float):
+                    child.setText(3, f"{value:.4f}")
+                elif isinstance(value, (list, dict)):
+                    child.setText(3, f"{type(value).__name__} ({len(value)} items)")
+                else:
+                    child.setText(3, str(value))
+                child.setForeground(0, QColor(180, 180, 180))  # Lighter text for child items
+                child.setForeground(3, QColor(180, 180, 180))
 
         self.results_tree.addTopLevelItem(item)
         self.results_tree.scrollToBottom()
@@ -1109,12 +1274,20 @@ class ProfessionalCameraTestGUI(QMainWindow):
         self.status_bar.showMessage("Results cleared")
 
     def export_results(self, format_type):
-        """Export test results"""
+        """Export test results in specified format"""
         if not self.test_results:
             QMessageBox.warning(self, "No Results", "No results to export")
             return
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        if format_type == 'pdf':
+            self.export_pdf_report(timestamp)
+        else:  # Default to JSON
+            self.export_json_report(timestamp)
+
+    def export_json_report(self, timestamp):
+        """Export results as JSON"""
         filename = f"camera_test_results_{timestamp}.json"
 
         data = {
@@ -1131,6 +1304,133 @@ class ProfessionalCameraTestGUI(QMainWindow):
             QMessageBox.information(self, "Export Complete", f"Results exported to {filename}")
         except Exception as e:
             QMessageBox.critical(self, "Export Error", f"Failed to export: {str(e)}")
+
+    def export_pdf_report(self, timestamp):
+        """Export results as PDF"""
+        filename = f"camera_test_results_{timestamp}.pdf"
+
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib import colors
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import inch
+
+            # Create PDF document
+            doc = SimpleDocTemplate(filename, pagesize=A4)
+            styles = getSampleStyleSheet()
+            story = []
+
+            # Title
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                spaceAfter=30,
+                alignment=1  # Center
+            )
+            story.append(Paragraph("USB Camera Test Results", title_style))
+            story.append(Spacer(1, 12))
+
+            # Test summary
+            story.append(Paragraph("Test Summary", styles['Heading2']))
+            total_tests = len(self.test_results)
+            passed = sum(1 for r in self.test_results if r.status.value == 'PASS')
+            failed = sum(1 for r in self.test_results if r.status.value == 'FAIL')
+            partial = sum(1 for r in self.test_results if r.status.value == 'PARTIAL')
+            skipped = sum(1 for r in self.test_results if r.status.value == 'SKIP')
+
+            summary_data = [
+                ['Total Tests:', str(total_tests)],
+                ['Passed:', str(passed)],
+                ['Failed:', str(failed)],
+                ['Partial:', str(partial)],
+                ['Skipped:', str(skipped)],
+                ['Generated:', datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+            ]
+
+            summary_table = Table(summary_data)
+            summary_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(summary_table)
+            story.append(Spacer(1, 12))
+
+            # Detailed results
+            story.append(Paragraph("Test Details", styles['Heading2']))
+
+            # Create table data for test results
+            table_data = [['Test Name', 'Status', 'Time', 'Details']]
+
+            for result in self.test_results:
+                # Format time
+                time_str = result.timestamp.split(' ')[1].split(':')
+                time_short = f"{time_str[0]}:{time_str[1]}"
+
+                # Get details
+                details = ""
+                if result.measurements:
+                    details = ", ".join([f"{k}: {v:.2f}" if isinstance(v, float) else f"{k}: {v}"
+                                       for k, v in list(result.measurements.items())[:2]])
+
+                if hasattr(result, 'message') and result.message:
+                    details = result.message if not details else f"{details} | {result.message}"
+
+                table_data.append([
+                    result.test_name,
+                    result.status.value,
+                    time_short,
+                    details[:50] + "..." if len(details) > 50 else details
+                ])
+
+            # Create and style the results table
+            results_table = Table(table_data, colWidths=[2.5*inch, 1*inch, 0.8*inch, 2.7*inch])
+            results_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+
+            # Color code the status cells
+            for i, result in enumerate(self.test_results, 1):
+                if result.status.value == 'PASS':
+                    results_table.setStyle(TableStyle([('BACKGROUND', (1, i), (1, i), colors.lightgreen)]))
+                elif result.status.value == 'FAIL':
+                    results_table.setStyle(TableStyle([('BACKGROUND', (1, i), (1, i), colors.lightcoral)]))
+                elif result.status.value == 'PARTIAL':
+                    results_table.setStyle(TableStyle([('BACKGROUND', (1, i), (1, i), colors.lightyellow)]))
+                elif result.status.value == 'SKIP':
+                    results_table.setStyle(TableStyle([('BACKGROUND', (1, i), (1, i), colors.lightgrey)]))
+
+            story.append(results_table)
+
+            # Build PDF
+            doc.build(story)
+
+            self.status_bar.showMessage(f"PDF report exported to {filename}")
+            QMessageBox.information(self, "Export Complete", f"PDF report exported to {filename}")
+
+        except ImportError:
+            QMessageBox.warning(self, "PDF Export Unavailable",
+                              "PDF export requires reportlab package.\n\n"
+                              "Install with: pip install reportlab")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export PDF: {str(e)}")
 
     def export_results_dialog(self):
         """Show export dialog"""

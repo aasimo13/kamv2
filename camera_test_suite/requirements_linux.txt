@@ -1,0 +1,18 @@
+# USB Camera Tester - Linux Dependencies
+# Optimized for Raspberry Pi and ARM architecture
+
+# Core dependencies
+numpy>=1.21.0,<2.0.0
+opencv-python-headless>=4.5.0
+PyQt6>=6.4.0,<6.8.0
+
+# PDF export support
+reportlab>=3.6.0
+
+# Optional dependencies for enhanced features
+Pillow>=8.0.0
+matplotlib>=3.3.0
+
+# Development/testing dependencies (optional)
+# pytest>=6.0.0
+# pytest-qt>=4.0.0
