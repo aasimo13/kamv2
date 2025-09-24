@@ -18,6 +18,14 @@ from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 
+# Import v4l2 settings module
+try:
+    from v4l2_settings import V4L2CameraSettings, format_test_results
+except ImportError:
+    # Fallback if module not available
+    V4L2CameraSettings = None
+    format_test_results = None
+
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QTextEdit, QTreeWidget, QTreeWidgetItem, QGroupBox,
@@ -285,7 +293,8 @@ class ModernCameraTestSuite:
             ("Image Sharpness", "sharpness"),
             ("Noise Analysis", "noise"),
             ("USB Performance", "usb"),
-            ("S5KGM1ST Sensor", "sensor")
+            ("S5KGM1ST Sensor", "sensor"),
+            ("V4L2 Optimal Settings", "v4l2")
         ]
 
     def get_test_name(self, test_key):
@@ -307,7 +316,8 @@ class ModernCameraTestSuite:
             "sharpness": self.test_sharpness,
             "noise": self.test_noise,
             "usb": self.test_usb_performance,
-            "sensor": self.test_sensor_specific
+            "sensor": self.test_sensor_specific,
+            "v4l2": self.test_v4l2_settings
         }
 
         test_func = test_map.get(test_key, self.test_placeholder)
@@ -408,6 +418,89 @@ class ModernCameraTestSuite:
 
     def test_sensor_specific(self, timestamp, camera):
         return DetailedTestResult("S5KGM1ST Sensor", TestStatus.PASS, "Sensor features verified", timestamp)
+
+    def test_v4l2_settings(self, timestamp, camera):
+        """Test V4L2 optimal settings for WN-L2307k368"""
+        if V4L2CameraSettings is None:
+            return DetailedTestResult(
+                "V4L2 Settings",
+                TestStatus.SKIP,
+                "V4L2 module not available (v4l2_settings.py missing)",
+                timestamp,
+                parameters={
+                    "platform": platform.system(),
+                    "v4l2_available": False
+                }
+            )
+
+        if platform.system() != 'Linux':
+            return DetailedTestResult(
+                "V4L2 Settings",
+                TestStatus.SKIP,
+                "V4L2 controls only available on Linux systems",
+                timestamp,
+                parameters={
+                    "platform": platform.system(),
+                    "v4l2_supported": False
+                }
+            )
+
+        try:
+            # Initialize V4L2 settings
+            v4l2 = V4L2CameraSettings()
+
+            # Run comprehensive settings test
+            results = v4l2.test_settings()
+
+            # Determine overall status
+            passed_tests = sum(1 for test in results['tests'] if test['passed'])
+            total_tests = len(results['tests'])
+
+            if passed_tests == total_tests and total_tests > 0:
+                status = TestStatus.PASS
+                message = f"All {total_tests} V4L2 tests passed - Optimal settings applied"
+            elif passed_tests > 0:
+                status = TestStatus.WARNING
+                message = f"{passed_tests}/{total_tests} V4L2 tests passed"
+            else:
+                status = TestStatus.FAIL
+                message = "V4L2 settings could not be applied"
+
+            # Extract detailed parameters
+            parameters = {
+                "region_detected": results.get('region_detected', 'Unknown'),
+                "power_line_frequency": f"{results.get('power_line_freq', 0)} Hz",
+                "v4l2_available": results.get('v4l2_available', False),
+                "tests_passed": passed_tests,
+                "tests_total": total_tests,
+                "optimal_settings": {
+                    "brightness": 15,
+                    "contrast": 34,
+                    "saturation": 32,
+                    "hue": 32,
+                    "gamma": 32,
+                    "gain": 1,
+                    "sharpness": 32,
+                    "white_balance_auto": 1,
+                    "exposure_auto": 3,
+                    "focus_auto": 1
+                }
+            }
+
+            # Add test details to parameters
+            for i, test in enumerate(results['tests']):
+                parameters[f"test_{i+1}"] = f"{'PASS' if test['passed'] else 'FAIL'}: {test['name']} - {test['message']}"
+
+            return DetailedTestResult("V4L2 Settings", status, message, timestamp, parameters)
+
+        except Exception as e:
+            return DetailedTestResult(
+                "V4L2 Settings",
+                TestStatus.FAIL,
+                f"Error testing V4L2 settings: {str(e)}",
+                timestamp,
+                parameters={"error": str(e), "platform": platform.system()}
+            )
 
     def test_placeholder(self, timestamp, camera):
         return DetailedTestResult("Test", TestStatus.SKIP, "Test not implemented", timestamp)
