@@ -58,40 +58,30 @@ echo "2. Clearing pip cache..."
 eval "$PIP_CMD cache purge" >/dev/null 2>&1
 
 echo "3. Installing compatible numpy version..."
-# Install numpy version compatible with opencv-python
-if eval "$PIP_CMD install --user --no-cache-dir 'numpy>=1.21.0,<2.3.0'" >/dev/null 2>&1; then
-    echo "✅ numpy installed successfully (compatible version)"
+# CRITICAL: Install numpy<2 for opencv compatibility
+if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'numpy<2'" >/dev/null 2>&1; then
+    echo "✅ numpy installed successfully (version <2 for opencv)"
 else
-    echo "❌ numpy installation failed"
-    exit 1
+    echo "Trying numpy 1.26.4 specifically..."
+    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'numpy==1.26.4'" >/dev/null 2>&1; then
+        echo "✅ numpy 1.26.4 installed successfully"
+    else
+        echo "❌ numpy installation failed"
+        exit 1
+    fi
 fi
 
-echo "4. Reinstalling opencv-python for $ARCH..."
-if [ "$ARCH" = "arm64" ]; then
-    # ARM64 (Apple Silicon) - use compatible version with pre-compiled binaries
-    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir --only-binary=all 'opencv-python>=4.8.0,<4.10.0'" >/dev/null 2>&1; then
-        echo "✅ opencv-python installed successfully (ARM64 compatible version)"
-    else
-        echo "⚠️  Trying fallback version..."
-        if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir --only-binary=all opencv-python" >/dev/null 2>&1; then
-            echo "✅ opencv-python installed successfully (ARM64 fallback)"
-        else
-            echo "❌ opencv-python installation failed"
-            exit 1
-        fi
-    fi
+echo "4. Reinstalling opencv-python..."
+# Let pip automatically find the best compatible version
+if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir opencv-python" >/dev/null 2>&1; then
+    echo "✅ opencv-python installed successfully"
 else
-    # x86_64 (Intel) - compatible version
-    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'opencv-python>=4.8.0,<4.10.0'" >/dev/null 2>&1; then
-        echo "✅ opencv-python installed successfully (x86_64 compatible version)"
+    echo "⚠️  Trying specific version 4.11.0.86..."
+    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'opencv-python==4.11.0.86'" >/dev/null 2>&1; then
+        echo "✅ opencv-python 4.11.0.86 installed successfully"
     else
-        echo "⚠️  Trying fallback version..."
-        if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir opencv-python" >/dev/null 2>&1; then
-            echo "✅ opencv-python installed successfully (x86_64 fallback)"
-        else
-            echo "❌ opencv-python installation failed"
-            exit 1
-        fi
+        echo "❌ opencv-python installation failed"
+        exit 1
     fi
 fi
 

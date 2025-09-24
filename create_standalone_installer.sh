@@ -282,34 +282,43 @@ if [ ${#MODULES_NEEDED[@]} -gt 0 ]; then
         echo "Installing $module for $ARCH architecture..."
 
         if [ "$module" = "numpy" ]; then
-            # Install numpy version compatible with opencv-python
-            if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'numpy>=1.21.0,<2.3.0'" >/dev/null 2>&1; then
-                echo "✅ $module installed successfully (compatible version)"
+            # CRITICAL: Install numpy<2 for opencv compatibility
+            echo "  Installing numpy<2 (required for opencv compatibility)..."
+            if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'numpy<2'" >/dev/null 2>&1; then
+                echo "✅ numpy installed successfully (version <2 for opencv)"
             else
-                echo "⚠️  $module installation may have issues, but continuing..."
+                echo "❌ numpy installation failed - trying alternative approach..."
+                eval "$PIP_CMD uninstall -y numpy" >/dev/null 2>&1
+                if eval "$PIP_CMD install --user --no-cache-dir 'numpy==1.26.4'" >/dev/null 2>&1; then
+                    echo "✅ numpy 1.26.4 installed successfully"
+                else
+                    echo "⚠️  numpy installation may have issues, but continuing..."
+                fi
             fi
         elif [ "$module" = "opencv-python" ]; then
             # Uninstall any existing opencv to avoid architecture conflicts
             echo "  Removing any existing opencv installations..."
             eval "$PIP_CMD uninstall -y opencv-python opencv-contrib-python opencv-python-headless" >/dev/null 2>&1
 
-            # Install opencv with specific version compatible with numpy
-            echo "  Installing opencv-python for $ARCH..."
-            if [ "$ARCH" = "arm64" ]; then
-                # ARM64 - use compatible version with pre-compiled binaries
-                if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir --only-binary=all 'opencv-python>=4.8.0,<4.10.0'" >/dev/null 2>&1; then
-                    echo "✅ $module installed successfully (ARM64 compatible version)"
-                else
-                    echo "⚠️  $module installation may have issues, trying fallback..."
-                    eval "$PIP_CMD install --user --force-reinstall --no-cache-dir --only-binary=all opencv-python" >/dev/null 2>&1
-                fi
+            # Install opencv - let pip find the best compatible version
+            echo "  Installing opencv-python (will auto-select compatible version)..."
+            if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir opencv-python" >/dev/null 2>&1; then
+                echo "✅ opencv-python installed successfully"
             else
-                # x86_64 - standard compatible version
-                if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'opencv-python>=4.8.0,<4.10.0'" >/dev/null 2>&1; then
-                    echo "✅ $module installed successfully (x86_64 compatible version)"
+                echo "⚠️  opencv-python installation failed, trying specific version..."
+                if [ "$ARCH" = "arm64" ]; then
+                    # Try specific ARM64 compatible version
+                    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'opencv-python==4.11.0.86'" >/dev/null 2>&1; then
+                        echo "✅ opencv-python 4.11.0.86 installed (ARM64)"
+                    else
+                        echo "❌ opencv-python installation failed"
+                    fi
                 else
-                    echo "⚠️  $module installation may have issues, trying fallback..."
-                    eval "$PIP_CMD install --user --force-reinstall --no-cache-dir opencv-python" >/dev/null 2>&1
+                    if eval "$PIP_CMD install --user --force-reinstall --no-cache-dir 'opencv-python==4.11.0.86'" >/dev/null 2>&1; then
+                        echo "✅ opencv-python 4.11.0.86 installed (x86_64)"
+                    else
+                        echo "❌ opencv-python installation failed"
+                    fi
                 fi
             fi
         elif [ "$module" = "PyQt6" ]; then
@@ -517,22 +526,29 @@ xattr -cr "$APP_DIR" 2>/dev/null || true
 echo ""
 echo "✅ Installation complete!"
 echo ""
-echo "🎉 USB Camera Tester is now installed! You can use it in multiple ways:"
+echo "============================================"
+echo "🎉 USB CAMERA TESTER INSTALLED SUCCESSFULLY!"
+echo "============================================"
 echo ""
-echo "📱 MAIN APP:"
-echo "   • USB Camera Tester (in Applications folder)"
+echo "📍 WHERE TO FIND IT:"
 echo ""
-echo "🚀 EASY LAUNCHERS (Better Camera Permissions):"
-echo "   • 🎥 Launch USB Camera Tester.command (on your Desktop)"
-echo "   • 🎥 Launch USB Camera Tester.command (in Applications folder)"
+echo "   DESKTOP:"
+echo "   ✅ 🎥 Launch USB Camera Tester.command"
+echo "      ↑ CLICK THIS TO START THE APP!"
 echo ""
-echo "💡 TIP: Use the launcher scripts for best camera access!"
+echo "   APPLICATIONS FOLDER:"
+echo "   • 🎥 Launch USB Camera Tester.command (backup launcher)"
+echo "   • USB Camera Tester.app (main application)"
+echo ""
+echo "💡 IMPORTANT: Always use the launcher script for best camera access!"
+echo "============================================"
 echo ""
 
 # Ask if user wants to launch now
-osascript -e 'display dialog "🎉 Installation Complete!\n\nUSB Camera Tester is ready to use!\n\n📱 Main App: Applications folder\n🚀 Easy Launcher: On your Desktop\n\n💡 For best camera permissions, use the launcher on your Desktop\n\nWould you like to launch it now?" buttons {"Not Now", "Launch Camera Tester"} default button "Launch Camera Tester"' > /tmp/user_choice.txt 2>/dev/null
+osascript -e 'display dialog "🎉 INSTALLATION SUCCESSFUL!\n\n✅ USB Camera Tester is ready!\n\nLOOK FOR THIS ON YOUR DESKTOP:\n🎥 Launch USB Camera Tester.command\n\nClick it anytime to start the app.\n\nWould you like to launch it now?" buttons {"Not Now", "Launch Camera Tester"} default button "Launch Camera Tester"' > /tmp/user_choice.txt 2>/dev/null
 
 if grep -q "Launch Camera Tester" /tmp/user_choice.txt 2>/dev/null; then
+    echo "Launching USB Camera Tester..."
     # Launch using the desktop launcher for best permissions
     open "$HOME/Desktop/🎥 Launch USB Camera Tester.command"
 fi
