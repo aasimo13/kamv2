@@ -422,28 +422,20 @@ class ModernCameraTestSuite:
     def test_v4l2_settings(self, timestamp, camera):
         """Test V4L2 optimal settings for WN-L2307k368"""
         if V4L2CameraSettings is None:
-            return DetailedTestResult(
-                "V4L2 Settings",
-                TestStatus.SKIP,
-                "V4L2 module not available (v4l2_settings.py missing)",
-                timestamp,
-                parameters={
-                    "platform": platform.system(),
-                    "v4l2_available": False
-                }
-            )
+            result = DetailedTestResult("V4L2 Settings", TestStatus.SKIP, "V4L2 module not available (v4l2_settings.py missing)", timestamp)
+            result.details = {
+                "platform": platform.system(),
+                "v4l2_available": False
+            }
+            return result
 
         if platform.system() != 'Linux':
-            return DetailedTestResult(
-                "V4L2 Settings",
-                TestStatus.SKIP,
-                "V4L2 controls only available on Linux systems",
-                timestamp,
-                parameters={
-                    "platform": platform.system(),
-                    "v4l2_supported": False
-                }
-            )
+            result = DetailedTestResult("V4L2 Settings", TestStatus.SKIP, "V4L2 controls only available on Linux systems", timestamp)
+            result.details = {
+                "platform": platform.system(),
+                "v4l2_supported": False
+            }
+            return result
 
         try:
             # Initialize V4L2 settings
@@ -491,16 +483,14 @@ class ModernCameraTestSuite:
             for i, test in enumerate(results['tests']):
                 parameters[f"test_{i+1}"] = f"{'PASS' if test['passed'] else 'FAIL'}: {test['name']} - {test['message']}"
 
-            return DetailedTestResult("V4L2 Settings", status, message, timestamp, parameters)
+            result = DetailedTestResult("V4L2 Settings", status, message, timestamp)
+            result.details = parameters
+            return result
 
         except Exception as e:
-            return DetailedTestResult(
-                "V4L2 Settings",
-                TestStatus.FAIL,
-                f"Error testing V4L2 settings: {str(e)}",
-                timestamp,
-                parameters={"error": str(e), "platform": platform.system()}
-            )
+            result = DetailedTestResult("V4L2 Settings", TestStatus.FAIL, f"Error testing V4L2 settings: {str(e)}", timestamp)
+            result.details = {"error": str(e), "platform": platform.system()}
+            return result
 
     def test_placeholder(self, timestamp, camera):
         return DetailedTestResult("Test", TestStatus.SKIP, "Test not implemented", timestamp)
