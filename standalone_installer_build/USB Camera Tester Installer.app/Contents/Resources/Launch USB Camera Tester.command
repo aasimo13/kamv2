@@ -64,32 +64,41 @@ if ! "$PYTHON_CMD" -c "import sys; print('Python version:', sys.version)" 2>/dev
 fi
 
 if ! "$PYTHON_CMD" -c "import numpy; print('✅ numpy version:', numpy.__version__)" 2>/dev/null; then
-    echo "❌ numpy import failed - trying to fix..."
-    # Try with clean environment
-    if ! env -i PATH="$PATH" "$PYTHON_CMD" -c "import numpy; print('✅ numpy fixed')" 2>/dev/null; then
-        echo "❌ numpy still failing. Please reinstall: pip3 install --user --force-reinstall numpy"
+    echo "❌ numpy import failed - auto-installing correct version..."
+    echo "Installing numpy<2 (required for opencv)..."
+    "$PYTHON_CMD" -m pip install --user --force-reinstall "numpy<2" >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import numpy; print('✅ numpy version:', numpy.__version__)" 2>/dev/null; then
+        echo "❌ numpy still failing. Please run: pip3 install --user 'numpy<2'"
         read -p "Press Enter to exit..."
         exit 1
     fi
 fi
 
 if ! "$PYTHON_CMD" -c "import cv2; print('✅ opencv version:', cv2.__version__)" 2>/dev/null; then
-    echo "❌ opencv import failed"
-    read -p "Press Enter to exit..."
-    exit 1
+    echo "❌ opencv import failed - auto-installing..."
+    "$PYTHON_CMD" -m pip install --user --force-reinstall opencv-python >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import cv2; print('✅ opencv version:', cv2.__version__)" 2>/dev/null; then
+        echo "❌ opencv still failing. Please run: pip3 install --user opencv-python"
+        read -p "Press Enter to exit..."
+        exit 1
+    fi
 fi
 
 if ! "$PYTHON_CMD" -c "import PyQt6; print('✅ PyQt6 imported successfully')" 2>/dev/null; then
-    echo "❌ PyQt6 import failed"
-    read -p "Press Enter to exit..."
-    exit 1
+    echo "❌ PyQt6 import failed - auto-installing..."
+    "$PYTHON_CMD" -m pip install --user PyQt6 >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import PyQt6; print('✅ PyQt6 imported successfully')" 2>/dev/null; then
+        echo "❌ PyQt6 still failing. Please run: pip3 install --user PyQt6"
+        read -p "Press Enter to exit..."
+        exit 1
+    fi
 fi
 
 echo "✅ All imports successful"
 
-# Run the app with clean environment
+# Run the app normally (no env -i which breaks Python paths)
 echo "Starting USB Camera Tester..."
-env -i PATH="$PATH" DISPLAY="$DISPLAY" "$PYTHON_CMD" main_pyqt6.py
+"$PYTHON_CMD" main_pyqt6.py
 
 echo ""
 echo "App closed."

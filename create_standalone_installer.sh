@@ -121,32 +121,41 @@ if ! "$PYTHON_CMD" -c "import sys; print('Python version:', sys.version)" 2>/dev
 fi
 
 if ! "$PYTHON_CMD" -c "import numpy; print('✅ numpy version:', numpy.__version__)" 2>/dev/null; then
-    echo "❌ numpy import failed - trying to fix..."
-    # Try with clean environment
-    if ! env -i PATH="$PATH" "$PYTHON_CMD" -c "import numpy; print('✅ numpy fixed')" 2>/dev/null; then
-        echo "❌ numpy still failing. Please reinstall: pip3 install --user --force-reinstall numpy"
+    echo "❌ numpy import failed - auto-installing correct version..."
+    echo "Installing numpy<2 (required for opencv)..."
+    "$PYTHON_CMD" -m pip install --user --force-reinstall "numpy<2" >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import numpy; print('✅ numpy version:', numpy.__version__)" 2>/dev/null; then
+        echo "❌ numpy still failing. Please run: pip3 install --user 'numpy<2'"
         read -p "Press Enter to exit..."
         exit 1
     fi
 fi
 
 if ! "$PYTHON_CMD" -c "import cv2; print('✅ opencv version:', cv2.__version__)" 2>/dev/null; then
-    echo "❌ opencv import failed"
-    read -p "Press Enter to exit..."
-    exit 1
+    echo "❌ opencv import failed - auto-installing..."
+    "$PYTHON_CMD" -m pip install --user --force-reinstall opencv-python >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import cv2; print('✅ opencv version:', cv2.__version__)" 2>/dev/null; then
+        echo "❌ opencv still failing. Please run: pip3 install --user opencv-python"
+        read -p "Press Enter to exit..."
+        exit 1
+    fi
 fi
 
 if ! "$PYTHON_CMD" -c "import PyQt6; print('✅ PyQt6 imported successfully')" 2>/dev/null; then
-    echo "❌ PyQt6 import failed"
-    read -p "Press Enter to exit..."
-    exit 1
+    echo "❌ PyQt6 import failed - auto-installing..."
+    "$PYTHON_CMD" -m pip install --user PyQt6 >/dev/null 2>&1
+    if ! "$PYTHON_CMD" -c "import PyQt6; print('✅ PyQt6 imported successfully')" 2>/dev/null; then
+        echo "❌ PyQt6 still failing. Please run: pip3 install --user PyQt6"
+        read -p "Press Enter to exit..."
+        exit 1
+    fi
 fi
 
 echo "✅ All imports successful"
 
-# Run the app with clean environment
+# Run the app normally (no env -i which breaks Python paths)
 echo "Starting USB Camera Tester..."
-env -i PATH="$PATH" DISPLAY="$DISPLAY" "$PYTHON_CMD" main_pyqt6.py
+"$PYTHON_CMD" main_pyqt6.py
 
 echo ""
 echo "App closed."
@@ -441,31 +450,19 @@ unset CLAUDE_CODE
 unset CLAUDE_CODE_SSE_PORT
 unset CLAUDE_CODE_ENTRYPOINT
 
-# Find Python executable with all required modules
+# Find Python executable - just find any Python, launcher will handle deps
 PYTHON_CMD=""
-echo "Searching for compatible Python installation..."
-
 for python_path in /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 /Library/Frameworks/Python.framework/Versions/*/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 python3 /usr/bin/python3 python; do
     if command -v "$python_path" &> /dev/null; then
-        echo "Testing Python: $python_path"
-        # Test if this Python can import all required modules
-        if "$python_path" -c "import numpy, cv2, PyQt6; print('All modules available')" 2>/dev/null; then
-            PYTHON_CMD="$python_path"
-            echo "✅ Found compatible Python: $python_path"
-            break
-        else
-            echo "  ❌ Missing modules in this Python"
-        fi
+        PYTHON_CMD="$python_path"
+        break
     fi
 done
 
 if [ -z "$PYTHON_CMD" ]; then
-    echo "❌ No compatible Python found with all required modules"
-    osascript -e 'display dialog "Python 3 with required modules not found.\n\nRequired modules: numpy, opencv-python, PyQt6\n\nPlease run the installer or fix script to install dependencies." buttons {"OK"} default button "OK" with icon stop'
+    osascript -e 'display dialog "Python 3 is required but not found.\n\nPlease install Python from python.org\n\nThen run this app again." buttons {"OK"} default button "OK" with icon stop'
     exit 1
 fi
-
-echo "Using Python: $PYTHON_CMD"
 
 # Change to the application directory
 cd "$RESOURCES_DIR/camera_test_suite"
