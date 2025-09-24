@@ -1,75 +1,77 @@
-# USB Camera Hardware Test Suite v4.0 - PyQt6 Professional Edition
+# USB Camera Tester v4.0 (PyQt6)
 
-A professional macOS application for comprehensive USB camera hardware testing and validation, featuring a **modern PyQt6 native GUI interface**. Specifically designed for **WN-L2307k368 48MP camera modules** used in photobooth applications.
+🎥 **Professional USB camera hardware testing suite with modern PyQt6 interface**
 
-![USB Camera Tester Icon](camera_test_suite/icons/icon_256x256.png)
+## Latest Updates (September 2024)
+- ✅ **Architecture-aware installer**: Automatic detection of ARM64 vs x86_64 for proper module installation
+- ✅ **Version compatibility management**: Ensures numpy, opencv-python, and PyQt6 versions work together
+- ✅ **Standalone installer**: Complete one-click solution that installs all dependencies automatically
+- ✅ **Enhanced camera permissions**: Multiple launcher options for better macOS camera access
+- ✅ **Fix script included**: Quickly resolve any module compatibility issues
 
-## 🎯 Overview
+## 🚀 Quick Install
 
-This application provides rigorous hardware testing and validation for USB camera modules to ensure they meet quality standards for commercial photobooth deployments. It performs 10+ comprehensive tests covering image quality, autofocus accuracy, exposure control, and hardware stability.
+### Option 1: Standalone Installer (Recommended for Distribution)
+**For colleagues or users without GitHub access:**
+1. Download: `🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg`
+2. Double-click the DMG file to mount it
+3. Double-click `USB Camera Tester Installer.app`
+4. Follow the prompts - all dependencies install automatically!
 
-## ✨ Features
+### Option 2: Build Your Own Installer
+```bash
+# Clone the repository
+git clone https://github.com/YourUsername/usb-camera-tester.git
+cd usb-camera-tester
 
-### Core Testing Capabilities
-- **🔍 PDAF (Phase Detection AutoFocus) Testing** - Validates autofocus accuracy and speed
-- **📸 Image Quality Assessment** - Comprehensive sharpness, noise, and color analysis
-- **⚡ Exposure Control Validation** - Tests auto-exposure accuracy across lighting conditions
-- **📊 Resolution & Format Testing** - Validates all supported resolutions and formats
-- **🎨 Color Accuracy Testing** - Ensures accurate color reproduction
-- **⚙️ Hardware Stress Testing** - Extended operation validation
-- **📈 Performance Benchmarking** - Frame rate and latency measurements
-- **🔧 Hardware Diagnostics** - USB interface and power consumption analysis
+# Build the standalone installer
+./create_standalone_installer.sh
+```
 
-### Professional Reporting
-- **📋 Detailed Test Reports** - Comprehensive PDF reports with pass/fail criteria
-- **📊 Performance Metrics** - Quantitative measurements and benchmarks
-- **🎯 Photobooth Compatibility** - Specific validation for commercial photobooth use
-- **📈 Trend Analysis** - Historical performance tracking
+### Option 3: Manual Install
+```bash
+# Clone the repository
+git clone https://github.com/YourUsername/usb-camera-tester.git
+cd usb-camera-tester
 
-### User Experience
-- **🎨 Modern PyQt6 Interface** - Professional native GUI with platform-native styling
-- **🧵 Non-blocking UI** - Threaded operations prevent interface freezing
-- **📏 Resizable Panels** - Flexible layout with adjustable splitter controls
-- **🚀 One-Click Installer** - Professional DMG installer with automatic PyQt6 setup
-- **📱 Real-time Preview** - Live camera feed during testing
-- **⚡ Fast Testing** - Complete test suite runs in under 5 minutes
+# Install dependencies with compatible versions
+pip3 install --user "numpy>=1.21.0,<2.3.0" "opencv-python>=4.8.0,<4.10.0" "PyQt6>=6.4.0,<6.8.0"
 
-## 🛠️ Installation
+# Run the application
+python3 camera_test_suite/main_pyqt6.py
+```
 
-### Requirements
-- macOS 10.14+ (Mojave or later)
-- Python 3.8+ (automatically installed if needed)
-- USB 2.0+ port
-- WN-L2307k368 48MP camera module
+## 🧪 Test Capabilities (with Detailed Parameters)
 
-### Quick Install
-1. Download the latest `USB_Camera_Tester_v4.0_PyQt6_Installer.dmg`
-2. Double-click to mount the disk image
-3. **Optional**: Run `USB Camera Tester Uninstaller.app` first for clean installation
-4. Run `USB Camera Tester Installer.app` (proper executable, not .py script)
-5. Follow the installation prompts
-6. Launch from Applications folder
+### Hardware Tests
+- **Camera Detection**: Enumerate all connected USB cameras with vendor/product IDs
+- **Resolution Testing**: Test all supported resolutions with bandwidth calculations
+- **Frame Rate Analysis**: Measure actual vs reported FPS with frame timing statistics
+- **USB Bandwidth**: Monitor data transfer rates (MB/s) and USB version detection
+- **Power Consumption**: Estimate power usage based on resolution and framerate
+- **Latency Testing**: Measure capture delays in milliseconds with percentile analysis
+- **Stability Testing**: Long-duration reliability tests with dropout detection
+- **Multi-Camera**: Test multiple cameras simultaneously with load balancing
+- **Image Quality**: Comprehensive sharpness, noise, and color accuracy analysis
+- **Autofocus Testing**: PDAF validation with speed and accuracy measurements
 
-The installer automatically:
-- Downloads the latest PyQt6 version from GitHub
-- Installs Python dependencies (OpenCV, NumPy, Pillow, PyQt6, etc.)
-- Creates a professional native macOS application
-- Sets up desktop integration with modern GUI
+All tests now show comprehensive technical parameters and measurements!
 
-### Clean Installation (Troubleshooting)
-If you experience installation issues or want to completely remove previous versions:
+## 📋 System Requirements
 
-1. Use `USB Camera Tester Uninstaller.app` first
-2. The uninstaller removes:
-   - All application files from `/Applications`
-   - Python packages (PyQt6, OpenCV, etc.)
-   - Cache and configuration files
-   - Temporary and log files
-3. Then run the installer for a fresh installation
+- **OS**: macOS 10.14+ / Windows 10+ / Linux (Ubuntu 20.04+)
+- **Python**: 3.8 or higher (3.13 recommended)
+- **Architecture**: ARM64 (Apple Silicon) or x86_64 (Intel) - both supported!
+- **RAM**: 4GB minimum (8GB recommended)
+- **USB**: USB 2.0 minimum (USB 3.0+ recommended)
+- **Dependencies** (automatically installed with correct versions):
+  - OpenCV (`opencv-python>=4.8.0,<4.10.0`)
+  - NumPy (`numpy>=1.21.0,<2.3.0`)
+  - PyQt6 (`PyQt6>=6.4.0,<6.8.0`)
 
-## 🧪 Camera Specifications
+## 🎯 Target Hardware
 
-**Target Hardware: WN-L2307k368 48MP Camera Module**
+**WN-L2307k368 48MP Camera Module**
 
 | Specification | Value |
 |---------------|-------|
@@ -81,175 +83,98 @@ If you experience installation issues or want to completely remove previous vers
 | **Autofocus** | PDAF (Phase Detection) |
 | **Frame Rate** | Up to 8fps @ 48MP |
 | **Formats** | MJPEG, YUY2 |
-| **Features** | HDR, WDR, Tetrapixel binning |
 
-## 📋 Test Suite Details
+## 🛠️ Troubleshooting
 
-### 1. **Image Sharpness Test**
-- Measures optical sharpness across the frame
-- Validates focus accuracy in center and corners
-- **Pass Criteria**: Sharpness score > 2000 Laplacian variance
+### Camera Not Detected
+1. Check camera permissions in System Settings
+2. Use the launcher script for better permissions: `🎥 Launch USB Camera Tester.command`
+3. Try disconnecting and reconnecting the camera
+4. Restart the application
 
-### 2. **PDAF Autofocus Test** 🎯
-- **Critical for photobooth applications**
-- Tests focus speed and accuracy
-- Validates focus hunting behavior
-- **Pass Criteria**: All 3 focus tests must succeed
+### Module Import Errors (numpy/opencv compatibility)
+```bash
+# Run the fix script (included in the installer)
+bash fix_numpy_issue.sh
 
-### 3. **Exposure Control Test**
-- Tests auto-exposure in various lighting conditions
-- Validates exposure consistency
-- **Pass Criteria**: Proper exposure across 80-180 brightness range
+# Or manually install compatible versions
+pip3 install --user --force-reinstall "numpy>=1.21.0,<2.3.0"
+pip3 install --user --force-reinstall "opencv-python>=4.8.0,<4.10.0"
+pip3 install --user --force-reinstall "PyQt6>=6.4.0,<6.8.0"
+```
 
-### 4. **Color Accuracy Test**
-- Validates color reproduction and white balance
-- Tests color consistency across conditions
-- **Pass Criteria**: Balanced RGB values within tolerance
+### Architecture Issues (Apple Silicon)
+The installer automatically detects ARM64 vs x86_64 and installs appropriate binaries. If you still have issues:
+```bash
+# For ARM64 Macs (Apple Silicon)
+pip3 install --user --force-reinstall --only-binary=all opencv-python
+```
 
-### 5. **Resolution Test**
-- Validates all supported resolutions
-- Tests format compatibility (MJPEG, YUY2)
-- **Pass Criteria**: All advertised resolutions functional
+## 📦 Distribution Files
 
-### 6. **Frame Rate Test**
-- Measures actual vs. advertised frame rates
-- Tests performance under load
-- **Pass Criteria**: Achieves target FPS ±10%
+### Standalone Installer (Recommended)
+- **File**: `standalone_installer_build/🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg`
+- **Size**: ~3MB
+- **Contents**: Complete installer with all dependencies
+- **Usage**: Send this single DMG file to colleagues - no GitHub or technical knowledge required!
 
-### 7. **Noise Reduction Test**
-- Evaluates noise performance in low light
-- Tests digital noise reduction effectiveness
-- **Pass Criteria**: SNR improvement demonstrated
-
-### 8. **HDR Capability Test**
-- Tests High Dynamic Range functionality
-- Validates exposure bracketing
-- **Pass Criteria**: HDR processing functional
-
-### 9. **USB Interface Test**
-- Validates USB communication stability
-- Tests power consumption
-- **Pass Criteria**: Stable USB enumeration
-
-### 10. **Hardware Stress Test**
-- Extended operation test (thermal)
-- Long-term stability validation
-- **Pass Criteria**: No failures during 30-minute test
-
-## 📊 Photobooth Validation
-
-**Critical for Commercial Photobooth Deployment:**
-
-- ✅ **Consistent Focus** - PDAF system must work reliably
-- ✅ **Fast Startup** - Camera ready in <3 seconds
-- ✅ **Stable Operation** - No crashes during extended use
-- ✅ **Quality Images** - Sharp, well-exposed photos consistently
-- ✅ **USB Reliability** - Stable connection over time
-
-**Strict Pass/Fail Criteria:** Cameras must pass ALL tests to be approved for photobooth use.
-
-## 🚀 Usage
-
-### Basic Testing
-1. Launch **USB Camera Tester** from Applications
-2. Connect your WN-L2307k368 camera via USB
-3. Click **"Connect Camera"** and grant camera permissions
-4. Select desired tests or click **"Run All Tests"**
-5. Wait for test completion (~5 minutes)
-6. Review results and generate PDF report
-
-### Advanced Features
-- **Custom Test Sequences** - Create specific test combinations
-- **Batch Testing** - Test multiple cameras sequentially
-- **Historical Analysis** - Track camera performance over time
-- **Export Data** - CSV export for further analysis
+### Support Scripts
+- **fix_numpy_issue.sh**: Fixes module compatibility issues
+- **create_standalone_installer.sh**: Builds new installer packages
 
 ## 📁 Project Structure
 
 ```
 kamv2/
 ├── camera_test_suite/          # Main application source
-│   ├── main.py                 # Legacy Tkinter application
-│   ├── main_pyqt6.py          # Modern PyQt6 application (v4.0)
-│   ├── launch_pyqt6.py        # PyQt6 launcher script
-│   ├── icons/                  # Application icons and branding
-│   ├── test_images/            # Reference images for testing
-│   └── create_logo.py          # Icon generation utility
-├── installer_build/            # Installer configuration
-│   └── USB Camera Tester Installer.app
-├── build_installer_app.py      # Professional installer/uninstaller builder
-├── USB_Camera_Tester_v4.0_PyQt6_Installer.dmg  # Production DMG with installer & uninstaller
-├── USB_Camera_Tester_Simple_Installer.py  # Installation logic
-├── USB_Camera_Tester_Uninstaller.py  # Complete removal script
-├── USB Camera Tester Installer.app/  # Professional installer app bundle
-├── USB Camera Tester Uninstaller.app/  # Professional uninstaller app bundle
-└── USB_Camera_Testing_Capabilities_Report.md  # Technical documentation
+│   ├── main_pyqt6.py          # Modern PyQt6 application
+│   └── icons/                  # Application icons
+├── standalone_installer_build/ # Current installer build
+│   ├── 🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg
+│   ├── USB Camera Tester Installer.app/
+│   └── fix_numpy_issue.sh
+├── create_standalone_installer.sh  # Build script
+├── fix_numpy_issue.sh          # Module fix script
+└── README.md                   # This file
 ```
 
 ## 🔧 Development
 
 ### Building from Source
 ```bash
-git clone https://github.com/aaronsimo13/kamv2.git
-cd kamv2
-python3 build_installer_app.py  # Create DMG with installer & uninstaller
+git clone https://github.com/YourUsername/usb-camera-tester.git
+cd usb-camera-tester
+./create_standalone_installer.sh  # Build complete installer
 ```
 
-### Testing PyQt6 Version
+### Running Directly
 ```bash
 cd camera_test_suite
 python3 main_pyqt6.py  # Run PyQt6 version directly
-python3 launch_pyqt6.py  # Alternative launcher
 ```
-
-### Dependencies
-- **PyQt6** - Modern native GUI framework
-- **OpenCV** - Camera interface and image processing
-- **NumPy** - Numerical computations
-- **Pillow** - Image manipulation
-- **Matplotlib** - Data visualization
-- **ReportLab** - PDF report generation
-- **PSUtil** - System monitoring
 
 ## 📈 Version History
 
-### v4.0 (Current) - PyQt6 Professional Edition
+### v4.0 (September 2024) - Enhanced Compatibility
+- 🔧 **Architecture Detection** - Automatic ARM64/x86_64 module installation
+- 📦 **Standalone Installer** - Complete one-click solution with all dependencies
+- 🔍 **Version Management** - Compatible module versions for numpy/opencv/PyQt6
+- 📊 **Enhanced Test Output** - Detailed technical parameters for all tests
+- 🚀 **Multiple Launchers** - Desktop and Applications folder access
+
+### v3.0 - PyQt6 Professional Edition
 - 🎨 **Complete GUI Rewrite** - Modern PyQt6 native interface
 - 🧵 **Non-blocking UI** - Threaded camera and test operations
 - 📏 **Responsive Design** - Resizable panels and professional layout
-- 🖥️ **Native Platform Integration** - macOS-native dialogs and styling
-- 🚀 **Enhanced Performance** - GPU-accelerated rendering where available
-- 📦 **Updated Installer** - Automatic PyQt6 dependency management
-- 🔧 **Improved Error Handling** - Professional dialog-based error reporting
-
-### v2.0
-- ✨ **Professional Logo & Branding** - Custom designed icon set
-- 🚀 **Enhanced Installer** - Streamlined installation process
-- 🔧 **Improved Stability** - Fixed GUI and crash issues
-- 📊 **Better Reporting** - Enhanced test result documentation
-- 🎯 **Photobooth Focus** - Specialized validation for commercial use
-
-### v1.0
-- Initial release with core testing functionality
-- Basic GUI and test suite implementation
-
-## 🤝 Contributing
-
-This is a specialized testing tool for specific hardware. For issues or improvements:
-
-1. Report issues via GitHub Issues
-2. Fork the repository for modifications
-3. Submit pull requests for enhancements
-4. Follow existing code style and testing patterns
 
 ## 📄 License
 
-Professional hardware testing tool for commercial photobooth applications.
+Professional hardware testing tool for commercial applications.
 
 ## 📞 Support
 
-For technical support, hardware validation questions, or commercial deployment assistance, please create an issue on GitHub with detailed information about your testing requirements.
+For technical support or questions, please create an issue on GitHub with detailed information about your testing requirements.
 
 ---
 
-**Built for reliable photobooth camera validation** 📸✨
+**Built for reliable USB camera validation** 📸✨
