@@ -2,24 +2,35 @@
 
 ## Critical Information for Pi Users
 
-### ⚠️ Installation Methods (Choose One)
+### ✅ Installation Methods (Choose One)
 
 | Method | Time | Pros | Cons |
 |--------|------|------|------|
+| **ONE-CLICK** ✅✅ | 5 minutes | Auto-detects Pi, creates desktop icon, foolproof | None |
 | **System Packages** ✅ | 5 minutes | Fast, reliable, no compilation | May have older versions |
 | **Fast Install** | 15-30 minutes | Newer packages, some pip | Some compilation risk |
 | **Full Install** ❌ | 4-6 hours | Latest versions | Often fails, overheats Pi |
 
-### Recommended Installation (Pi 3B)
+### Recommended Installation (ANY Pi model)
 
 ```bash
-# 1. System packages only (RECOMMENDED)
+# 1. ONE-CLICK INSTALLER (BEST for all Pi models)
+chmod +x pi_one_click_setup.sh
+./pi_one_click_setup.sh
+
+# Creates desktop icon you can double-click!
+```
+
+### Alternative Methods
+
+```bash
+# 2. System packages only (if one-click fails)
 sudo ./install_pi_system_only.sh
 
-# 2. If that fails, try manual
+# 3. Manual (last resort)
 sudo apt update
-sudo apt install -y python3 python3-numpy python3-opencv python3-pyqt6 python3-reportlab v4l-utils
-python3 main_pyqt6.py
+sudo apt install -y python3 python3-numpy python3-opencv python3-pyqt5 python3-reportlab v4l-utils
+python3 main_pyqt6.py  # Will auto-adapt to PyQt5
 ```
 
 ## Common Pi 3B Issues & Solutions
@@ -28,22 +39,37 @@ python3 main_pyqt6.py
 **Cause:** Files transferred from Windows/Mac have wrong line endings
 **Solution:**
 ```bash
+# Quick fix
 sudo apt install dos2unix
 dos2unix *.sh *.py
 chmod +x *.sh *.py
+
+# Or use the one-click installer (handles this automatically)
+bash pi_one_click_setup.sh
 ```
 
 ### Issue: OpenCV compilation hangs
 **Cause:** Pi 3B has insufficient RAM (1GB) for compilation
 **Solutions:**
 ```bash
-# Option 1: Use system packages (recommended)
-sudo apt install python3-opencv
+# Option 1: Use one-click installer (recommended)
+./pi_one_click_setup.sh
 
-# Option 2: Increase swap (risky - may kill SD card)
+# Option 2: Use system packages
+sudo apt install python3-opencv python3-pyqt5
+
+# Option 3: Increase swap (risky - may kill SD card)
 sudo dphys-swapfile swapoff
 echo "CONF_SWAPSIZE=2048" | sudo tee -a /etc/dphys-swapfile
 sudo dphys-swapfile setup && sudo dphys-swapfile swapon
+```
+
+### Issue: V4L2 test shows weird file errors (FIXED)
+**Cause:** Bug in test_v4l2_linux.py was testing all files instead of camera devices
+**Solution:**
+```bash
+# Bug has been fixed - script now tests actual /dev/video* devices
+python3 test_v4l2_linux.py  # Works correctly now
 ```
 
 ### Issue: "Permission denied" on camera

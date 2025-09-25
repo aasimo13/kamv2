@@ -15,18 +15,26 @@ This professional USB camera testing suite is optimized for Linux systems, parti
 
 ### Quick Installation
 
-**⚠️ IMPORTANT for Raspberry Pi:** Use system packages to avoid long compilation times!
+**🎯 ONE-CLICK INSTALLER (RECOMMENDED for ALL Pi models):**
 
 ```bash
-# Raspberry Pi 3B (RECOMMENDED - uses system packages, 5 minutes)
+# Works on Pi 3B, 4, 5 - automatic detection and setup
+chmod +x pi_one_click_setup.sh
+./pi_one_click_setup.sh
+```
+
+**Advanced Installation Options:**
+
+```bash
+# Pi 3B (system packages only - 5 minutes)
 chmod +x install_pi_system_only.sh
 sudo ./install_pi_system_only.sh
 
-# Alternative Pi installer (uses some pip packages)
-chmod +x install_pi_fast.sh
-sudo ./install_pi_fast.sh
+# Pi 5 (optimized with compilation - 30-45 minutes)
+chmod +x install_pi5_optimized.sh
+sudo ./install_pi5_optimized.sh
 
-# Generic Linux (may compile packages - can take hours on Pi)
+# Generic Linux (may compile packages - can take hours on Pi 3B)
 chmod +x install_linux.sh
 sudo ./install_linux.sh
 ```
@@ -77,14 +85,26 @@ newgrp video
 
 ### Running the Application
 
-#### GUI Mode
+#### After One-Click Installation
 ```bash
-./launch_camera_tester.sh
+# Three easy ways after running pi_one_click_setup.sh:
+
+# 1. Desktop icon (easiest)
+# Look for "USB Camera Tester" on your desktop and double-click
+
+# 2. File manager
+# Navigate to ~/camera-tester/ and double-click RUN_CAMERA_TESTER.sh
+
+# 3. Terminal command
+camera-tester
 ```
 
-#### Command Line
+#### Advanced Installation Methods
 ```bash
-usb-camera-tester
+# If you used other installers:
+./launch_camera_tester.sh    # Generic launcher
+usb-camera-tester           # System command
+pi-camera-tester           # Pi-specific command
 ```
 
 #### From Applications Menu
@@ -151,14 +171,21 @@ echo 'gpu_mem=128' | sudo tee -a /boot/config.txt
 
 #### Installation Issues on Raspberry Pi
 
+**BEST SOLUTION - Use One-Click Installer:**
+```bash
+# This avoids most issues by auto-detecting your Pi model
+chmod +x pi_one_click_setup.sh
+./pi_one_click_setup.sh
+```
+
 **OpenCV compilation stuck/failed:**
 ```bash
 # Kill the installation
 Ctrl+C
 
-# Use system packages instead (much faster)
-sudo apt install python3-opencv python3-numpy python3-pyqt6
-python3 -c "import cv2, numpy, PyQt6; print('All working!')"
+# Use one-click installer or system packages instead (much faster)
+sudo apt install python3-opencv python3-numpy python3-pyqt5
+python3 -c "import cv2, numpy; print('All working!')"
 ```
 
 **"Command not found" errors:**
@@ -169,19 +196,23 @@ dos2unix *.sh *.py
 chmod +x *.sh *.py
 
 # Or run with bash explicitly
-sudo bash install_pi_system_only.sh
+bash pi_one_click_setup.sh
+```
+
+**V4L2 test showing file errors (FIXED):**
+```bash
+# The test_v4l2_linux.py bug has been fixed
+# It now properly tests /dev/video* devices instead of random files
+python3 test_v4l2_linux.py
 ```
 
 **Pi runs out of memory during compilation:**
 ```bash
-# Use system packages only - no compilation needed
-sudo ./install_pi_system_only.sh
+# Use one-click installer (avoids compilation)
+./pi_one_click_setup.sh
 
-# Or increase swap (temporary fix)
-sudo dphys-swapfile swapoff
-sudo nano /etc/dphys-swapfile  # Set CONF_SWAPSIZE=2048
-sudo dphys-swapfile setup
-sudo dphys-swapfile swapon
+# Or system packages only
+sudo apt install python3-opencv python3-numpy python3-pyqt5
 ```
 
 #### Camera Not Detected

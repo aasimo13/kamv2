@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-V4L2 Test Script for Linux
-Tests all V4L2 functionality without GUI
-Perfect for Raspberry Pi and headless testing
+V4L2 Test Script for Linux - FIXED VERSION
+Tests actual V4L2 devices, not random files
 """
 
 import sys
 import subprocess
 import platform
+import glob
 from v4l2_settings import V4L2CameraSettings, format_test_results
 
 def main():
-    print("🎥 USB Camera Tester - V4L2 Test Suite")
-    print("=" * 50)
+    print("🎥 USB Camera Tester - V4L2 Test Suite (FIXED)")
+    print("=" * 55)
     print(f"Platform: {platform.system()} {platform.release()}")
     print(f"Architecture: {platform.machine()}")
     print(f"Python: {sys.version}")
@@ -53,7 +53,6 @@ def main():
     video_devices = []
     try:
         # Use glob to find actual video devices
-        import glob
         video_devices = glob.glob('/dev/video*')
         video_devices.sort()  # Sort them numerically
     except Exception as e:
@@ -61,16 +60,14 @@ def main():
 
     if not video_devices:
         print("❌ No video devices found in /dev/")
+        print("   Check: ls -la /dev/video*")
+        print("   Connect a USB camera and try again")
         return 1
 
     print(f"\n🎯 Testing {len(video_devices)} video devices")
-    print("-" * 30)
+    print("-" * 35)
 
     for device in video_devices:
-        device = device.strip()
-        if not device:
-            continue
-
         print(f"\n📸 Testing {device}")
         print("-" * (len(device) + 10))
 
@@ -93,16 +90,16 @@ def main():
         except:
             pass
 
-        # List formats
+        # List formats (first 10 lines to avoid spam)
         try:
             print(f"\n🎨 Supported formats for {device}")
             result = subprocess.run(['v4l2-ctl', '--device', device, '--list-formats-ext'],
                                   capture_output=True, text=True)
             if result.returncode == 0:
-                # Show only first 20 lines to avoid clutter
-                lines = result.stdout.split('\n')[:20]
+                # Show only first 15 lines to avoid clutter
+                lines = result.stdout.split('\n')[:15]
                 print('\n'.join(lines))
-                if len(result.stdout.split('\n')) > 20:
+                if len(result.stdout.split('\n')) > 15:
                     print("   ... (output truncated)")
         except:
             pass
@@ -139,6 +136,7 @@ def main():
     print("   • Use 'v4l2-ctl -d /dev/video0 --all' to see current settings")
     print("   • Use 'guvcview' for a simple camera viewer")
     print("   • Check 'dmesg | grep -i camera' for hardware messages")
+    print("   • Connect USB camera and run 'lsusb | grep -i camera'")
 
     return 0
 
