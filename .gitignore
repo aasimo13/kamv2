@@ -36,20 +36,24 @@ build/
 temp/
 tmp/
 
-# App bundles (generated - but keep final release builds)
-installer_build/temp_*
-# Allow final release builds
-!installer_build/USB_Camera_Tester_Installer_v2.0.dmg
-!installer_build/USB\ Camera\ Tester\ Installer.app
+# Build artifacts (distribute the .dmg via GitHub Releases, do not commit it)
+*.app/
+*.dmg
+dmg_temp/
+installer_build/
+standalone_installer_build/
 
 # Log files
 *.log
 installer_debug.log
 
-# Test outputs
+# Test outputs / generated samples
 test_results/
 screenshots/
+test_images/
 test_images_output/
+*_results_*.json
+camera_test_results_*.json
 
 # Local configuration
 config.local.py

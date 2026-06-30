@@ -11,18 +11,23 @@
 
 ## 🚀 Quick Install
 
-### Option 1: Standalone Installer (Recommended for Distribution)
-**For colleagues or users without GitHub access:**
-1. Download: `🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg`
+### Option 1: Standalone Installer (Recommended for non-technical users)
+**For colleagues who just want to run the app on macOS:**
+1. Download the latest `USB Camera Tester` DMG from the
+   [Releases page](https://github.com/aasimo13/kamv2/releases)
 2. Double-click the DMG file to mount it
 3. Double-click `USB Camera Tester Installer.app`
 4. Follow the prompts - all dependencies install automatically!
 
+> The prebuilt `.dmg` is distributed via GitHub Releases rather than being
+> committed to the repository. Build it yourself with `./create_standalone_installer.sh`
+> (see Option 2) and attach the resulting DMG to a Release.
+
 ### Option 2: Build Your Own Installer
 ```bash
 # Clone the repository
-git clone https://github.com/YourUsername/usb-camera-tester.git
-cd usb-camera-tester
+git clone https://github.com/aasimo13/kamv2.git
+cd kamv2
 
 # Build the standalone installer
 ./create_standalone_installer.sh
@@ -31,8 +36,8 @@ cd usb-camera-tester
 ### Option 3: Manual Install
 ```bash
 # Clone the repository
-git clone https://github.com/YourUsername/usb-camera-tester.git
-cd usb-camera-tester
+git clone https://github.com/aasimo13/kamv2.git
+cd kamv2
 
 # Install dependencies with compatible versions
 pip3 install --user "numpy>=1.21.0,<2.3.0" "opencv-python>=4.8.0,<4.10.0" "PyQt6>=6.4.0,<6.8.0"
@@ -41,21 +46,24 @@ pip3 install --user "numpy>=1.21.0,<2.3.0" "opencv-python>=4.8.0,<4.10.0" "PyQt6
 python3 camera_test_suite/main_pyqt6.py
 ```
 
-## 🧪 Test Capabilities (with Detailed Parameters)
+## 🧪 Test Capabilities
 
-### Hardware Tests
-- **Camera Detection**: Enumerate all connected USB cameras with vendor/product IDs
-- **Resolution Testing**: Test all supported resolutions with bandwidth calculations
-- **Frame Rate Analysis**: Measure actual vs reported FPS with frame timing statistics
-- **USB Bandwidth**: Monitor data transfer rates (MB/s) and USB version detection
-- **Power Consumption**: Estimate power usage based on resolution and framerate
-- **Latency Testing**: Measure capture delays in milliseconds with percentile analysis
-- **Stability Testing**: Long-duration reliability tests with dropout detection
-- **Multi-Camera**: Test multiple cameras simultaneously with load balancing
-- **Image Quality**: Comprehensive sharpness, noise, and color accuracy analysis
-- **Autofocus Testing**: PDAF validation with speed and accuracy measurements
+The suite runs the following tests (defined in `camera_test_suite/main_pyqt6.py`).
+You can run them individually or all at once:
 
-All tests now show comprehensive technical parameters and measurements!
+- **Connection & Detection**: Enumerate connected USB cameras and confirm capture
+- **Resolution Validation**: Probe supported resolutions and verify frame size
+- **Frame Rate Analysis**: Measure actual vs reported FPS with frame timing
+- **PDAF Autofocus System**: Phase-detection autofocus checks
+- **Exposure Control**: Exposure setting / response checks
+- **White Balance**: White-balance behavior checks
+- **Image Sharpness**: Sharpness measurement on captured frames
+- **Noise Analysis**: Image noise measurement
+- **USB Performance**: USB throughput / bandwidth observations
+- **S5KGM1ST Sensor**: Sensor-specific checks for the target module
+- **V4L2 Optimal Settings**: Recommended V4L2 settings (Linux/Raspberry Pi)
+
+Results can be exported to JSON, and a PDF report can be generated (via `reportlab`).
 
 ## 📋 System Requirements
 
@@ -110,40 +118,46 @@ The installer automatically detects ARM64 vs x86_64 and installs appropriate bin
 pip3 install --user --force-reinstall --only-binary=all opencv-python
 ```
 
-## 📦 Distribution Files
+## 📦 Distribution
 
-### Standalone Installer (Recommended)
-- **File**: `standalone_installer_build/🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg`
-- **Size**: ~3MB
-- **Contents**: Complete installer with all dependencies
-- **Usage**: Send this single DMG file to colleagues - no GitHub or technical knowledge required!
+### Standalone Installer
+The macOS `.dmg` installer is a build artifact and is **not** committed to this
+repository. Build it locally with `./create_standalone_installer.sh`, then attach
+the resulting DMG to a [GitHub Release](https://github.com/aasimo13/kamv2/releases)
+so non-technical users can download a single file - no GitHub or technical
+knowledge required.
 
 ### Support Scripts
-- **fix_numpy_issue.sh**: Fixes module compatibility issues
-- **create_standalone_installer.sh**: Builds new installer packages
+- **fix_numpy_issue.sh**: Fixes numpy/opencv module compatibility issues
+- **create_standalone_installer.sh**: Builds the macOS standalone installer / DMG
 
 ## 📁 Project Structure
 
 ```
 kamv2/
-├── camera_test_suite/          # Main application source
-│   ├── main_pyqt6.py          # Modern PyQt6 application
-│   └── icons/                  # Application icons
-├── standalone_installer_build/ # Current installer build
-│   ├── 🎥_USB_Camera_Tester_COMPLETE_INSTALLER_v4.0.dmg
-│   ├── USB Camera Tester Installer.app/
-│   └── fix_numpy_issue.sh
-├── create_standalone_installer.sh  # Build script
-├── fix_numpy_issue.sh          # Module fix script
-└── README.md                   # This file
+├── camera_test_suite/              # Main application source
+│   ├── main_pyqt6.py               # PyQt6 desktop application (primary)
+│   ├── main.py                     # Earlier Tkinter-based version
+│   ├── cli.py                      # Command-line entry point
+│   ├── v4l2_settings.py            # Linux/Raspberry Pi V4L2 helpers
+│   ├── icons/                      # Application icons
+│   └── *.sh / *_GUIDE.md           # Linux / Raspberry Pi install + guides
+├── assets/                         # macOS Info.plist, .desktop entry
+├── create_standalone_installer.sh  # Build script (produces the DMG)
+├── fix_numpy_issue.sh              # Module fix script
+├── requirements.txt                # Python dependencies
+└── README.md                       # This file
 ```
+
+> Build output (`standalone_installer_build/`, `*.app`, `*.dmg`), generated test
+> images, and test-result JSON files are intentionally git-ignored.
 
 ## 🔧 Development
 
 ### Building from Source
 ```bash
-git clone https://github.com/YourUsername/usb-camera-tester.git
-cd usb-camera-tester
+git clone https://github.com/aasimo13/kamv2.git
+cd kamv2
 ./create_standalone_installer.sh  # Build complete installer
 ```
 
@@ -167,9 +181,15 @@ python3 main_pyqt6.py  # Run PyQt6 version directly
 - 🧵 **Non-blocking UI** - Threaded camera and test operations
 - 📏 **Responsive Design** - Resizable panels and professional layout
 
+## 📊 Status
+
+Working (v4.0). The PyQt6 desktop app and the test suite run today. The macOS
+standalone installer builds via `create_standalone_installer.sh`. Linux and
+Raspberry Pi are supported through the scripts and guides in `camera_test_suite/`.
+
 ## 📄 License
 
-Professional hardware testing tool for commercial applications.
+Released under the [MIT License](LICENSE) - free to use, modify, and distribute.
 
 ## 📞 Support
 
